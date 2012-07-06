@@ -53,7 +53,7 @@ public class BottomUpAnnClustering {
 		}
 		Map<String, Double> crtDiseasePrecisionLoss = new HashMap<String, Double>();
 		Map<String, String> crtReplacement = new HashMap<String, String>();
-		double PRECISION_THRESHOLD = .85;
+		double PRECISION_THRESHOLD = 1.1;// .995;
 
 		Ontology ontology = this.ontology;// .clone();
 		Predictor p = new ICPredictor();
@@ -167,7 +167,7 @@ public class BottomUpAnnClustering {
 					ontology.removeNode(term.getId());
 
 				}
-				if (lCount % 10 == 0) {
+				if (lCount % 10 == 0 || lCount == crtLevel.size()) {
 					progress("Level:   ", lCount, crtLevel.size());
 					progress("Removed: ", removedNodes, ontology.size());
 				}

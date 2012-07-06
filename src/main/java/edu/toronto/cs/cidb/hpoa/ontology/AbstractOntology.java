@@ -351,8 +351,8 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 		crt.add(this.getRootId());
 		CounterMap<Integer> h = new CounterMap<Integer>();
 
-		// int min = this.size(), max = 0;
-		// double avg = 0;
+		int min = this.size(), max = 0;
+		double avg = 0;
 
 		while (!crt.isEmpty()) {
 			for (String id : crt) {
@@ -362,13 +362,13 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 				OntologyTerm term = this.getTerm(id);
 				int p = term.getParents().size();
 				h.addTo(p);
-				// if (min > p) {
-				// min = p;
-				// }
-				// if (max < p) {
-				// max = p;
-				// }
-				// avg += p;
+				if (min > p) {
+					min = p;
+				}
+				if (max < p) {
+					max = p;
+				}
+				avg += p;
 				out.println(term);
 				visited.put(id, true);
 				next.addAll(term.getChildren());
@@ -377,12 +377,13 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 			crt.addAll(next);
 			next.clear();
 		}
-		// avg /= this.size();
+		avg /= this.size();
 		out.println(h);
-		// out.println();
-		// out.println("MIN: " + min);
-		// out.println("MAX: " + max);
-		// out.println("AVG: " + avg);
+		out.println();
+		out.println("SIZE " + this.size());
+		out.println("MIN: " + min);
+		out.println("MAX: " + max);
+		out.println("AVG: " + avg);
 	}
 	// @Override
 	// public AbstractOntology clone() {
