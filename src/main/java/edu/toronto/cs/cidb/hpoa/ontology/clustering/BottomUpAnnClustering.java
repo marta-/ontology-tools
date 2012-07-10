@@ -77,12 +77,9 @@ public class BottomUpAnnClustering {
 			Collections.sort(sortedResults);
 			Collections.reverse(sortedResults);
 			int lCount = 0;
-			// for (String termId : crtLevel) {
-			// OntologyTerm term = this.ontology.getTerm(termId);
 			for (SearchResult r : sortedResults) {
 				OntologyTerm term = this.ontology.getTerm(r.getId());
 				if (term == null) {
-					// System.out.println(termId + " is NULL");
 					continue;
 				}
 				logln((++lCount) + "/" + crtLevel.size() + "\t" + term + "...");
@@ -97,42 +94,24 @@ public class BottomUpAnnClustering {
 							+ d.getId() + " " + d.getName());
 					Collection<String> symptoms = d.getOriginalAnnotations();
 					symptoms.remove(term.getId());
-					// String replacement = null;
 					double replacementScore = 0;
-					// for (String n : term.getParents()) {
-					// String pId = ontology.getRealId(n);
-					// symptoms.add(pId);
-					// double score = p.getMatchScore(symptoms, d.getId());
-					// if (score > replacementScore) {
-					// replacementScore = score;
-					// replacement = pId;
-					// }
-					// symptoms.remove(pId);
-					// }
 					for (String n : term.getParents()) {
 						String pId = ontology.getRealId(n);
 						symptoms.add(pId);
 					}
 					replacementScore = p.getMatchScore(symptoms, d.getId());
 
-					// if (replacement != null) {
 					logln("\t\t\treplcement score " + replacementScore);
 					canContract = canContract
 							&& ((replacementScore * adjustedDiseasePrecision
 									.get(d.getId())) >= PRECISION_THRESHOLD);
 					crtDiseasePrecisionLoss.put(d.getId(), replacementScore);
-					// crtReplacement.put(d.getId(), replacement);
-					// } else {
-					// canContract = false;
-					// }
 					if (!canContract) {
 						break;
 					}
 				}
 				logln("can contract " + term.getId() + "? " + canContract);
 				if (canContract) {
-					// AnnotationTerm phenotype = this.annotation
-					// .getAnnotationNode(term.getId());
 					for (AnnotationTerm d : diseases) {
 						if (crtDiseasePrecisionLoss.get(d.getId()) == null) {
 							System.out.println(d.getId() + " => NULL!");
@@ -146,8 +125,6 @@ public class BottomUpAnnClustering {
 										* crtDiseasePrecisionLoss
 												.get(d.getId()));
 						d.getOriginalAnnotations().remove(term.getId());
-						// d.getOriginalAnnotations().add(
-						// crtReplacement.get(d.getId()));
 						for (String n : term.getParents()) {
 							d.getOriginalAnnotations().add(
 									ontology.getRealId(n));
