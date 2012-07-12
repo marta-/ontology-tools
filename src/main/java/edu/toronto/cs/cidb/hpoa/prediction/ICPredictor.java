@@ -49,7 +49,10 @@ public class ICPredictor extends AbstractPredictor {
 	}
 
 	private double getIC(AnnotationTerm hpoNode) {
-		return hpoNode == null ? 0 : getCachedIC(hpoNode);
+		// return hpoNode == null ? 0 : getCachedIC(hpoNode);
+		return hpoNode == null ? 0 : -Math.log((double) hpoNode
+				.getNeighborsCount()
+				/ this.annotations.getAnnotations().size());
 	}
 
 	private double getCachedIC(AnnotationTerm hpoNode) {

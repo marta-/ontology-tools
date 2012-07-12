@@ -1,17 +1,15 @@
 package edu.toronto.cs.cidb.hpoa.ontology.clustering;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
+import edu.toronto.cs.cidb.hpoa.ontology.HPO;
 import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
 import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
 import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
@@ -47,14 +45,6 @@ public class BottomUpAnnClustering {
 		int removedNodes = 0;
 		int removedArcs = 0;
 
-		Map<String, Double> adjustedDiseasePrecision = new HashMap<String, Double>();
-		for (String d : this.annotation.getAnnotationIds()) {
-			adjustedDiseasePrecision.put(d, 1.0);
-		}
-		Map<String, Double> crtDiseasePrecisionLoss = new HashMap<String, Double>();
-		Map<String, String> crtReplacement = new HashMap<String, String>();
-		double PRECISION_THRESHOLD = 1.1;// .995;
-
 		Ontology ontology = this.ontology;// .clone();
 		Predictor p = new ICPredictor();
 		p.setAnnotation(this.annotation);
@@ -67,7 +57,6 @@ public class BottomUpAnnClustering {
 		}
 		logln();
 		logln("crt level size = " + crtLevel.size());
-		// Set<String> L1 = new HashSet<String>();
 		while (!crtLevel.isEmpty()) {
 			List<SearchResult> sortedResults = new LinkedList<SearchResult>();
 			for (String item : crtLevel) {
@@ -83,56 +72,7 @@ public class BottomUpAnnClustering {
 					continue;
 				}
 				logln((++lCount) + "/" + crtLevel.size() + "\t" + term + "...");
-				Collection<AnnotationTerm> diseases = this.annotation
-						.getAnnotations(term.getId());
-				boolean canContract = true;
-				int dCount = 0;
-				crtDiseasePrecisionLoss.clear();
-				crtReplacement.clear();
-				for (AnnotationTerm d : diseases) {
-					logln("\t\t" + (++dCount) + "/" + diseases.size() + "\t"
-							+ d.getId() + " " + d.getName());
-					Collection<String> symptoms = d.getOriginalAnnotations();
-					symptoms.remove(term.getId());
-					double replacementScore = 0;
-					for (String n : term.getParents()) {
-						String pId = ontology.getRealId(n);
-						symptoms.add(pId);
-					}
-					replacementScore = p.getMatchScore(symptoms, d.getId());
-
-					logln("\t\t\treplcement score " + replacementScore);
-					canContract = canContract
-							&& ((replacementScore * adjustedDiseasePrecision
-									.get(d.getId())) >= PRECISION_THRESHOLD);
-					crtDiseasePrecisionLoss.put(d.getId(), replacementScore);
-					if (!canContract) {
-						break;
-					}
-				}
-				logln("can contract " + term.getId() + "? " + canContract);
-				if (canContract) {
-					for (AnnotationTerm d : diseases) {
-						if (crtDiseasePrecisionLoss.get(d.getId()) == null) {
-							System.out.println(d.getId() + " => NULL!");
-							System.out.println(diseases);
-							System.out.println(crtDiseasePrecisionLoss);
-							System.exit(0);
-
-						}
-						adjustedDiseasePrecision.put(d.getId(),
-								adjustedDiseasePrecision.get(d.getId())
-										* crtDiseasePrecisionLoss
-												.get(d.getId()));
-						d.getOriginalAnnotations().remove(term.getId());
-						for (String n : term.getParents()) {
-							d.getOriginalAnnotations().add(
-									ontology.getRealId(n));
-						}
-						d.removeNeighbor(term.getId());
-
-					}
-
+				if (remove(term.getId(), p)) {
 					logln("REMOVING: " + term);
 					removedNodes++;
 					removedArcs += term.getNeighborsCount();
@@ -157,5 +97,81 @@ public class BottomUpAnnClustering {
 		logln("TOTAL REMOVED: " + removedNodes + "n " + removedArcs + "a");
 		progress("TOTAL REMOVED: ", removedNodes, ontology.size());
 		return ontology;
+	}
+
+	protected boolean remove(String phenotype, Predictor predictor) {
+		AnnotationTerm aP = this.annotation.getHPONode(phenotype);
+		if (aP == null) {
+			return true;
+		}
+		OntologyTerm oP = HPO.getInstance().getTerm(phenotype);
+
+		// Diseases presenting this phenotype
+		Set<String> relatedDiseases = new HashSet<String>();
+		relatedDiseases.addAll(aP.getNeighbors());
+		// For all these diseases, replace the phenotype with its parents in the
+		// annotation graph
+		for (String d : relatedDiseases) {
+			AnnotationTerm aD = this.annotation.getAnnotationNode(d);
+			aD.removeNeighbor(phenotype);
+			if (aD.getOriginalAnnotations().remove(phenotype)) {
+				aD.getOriginalAnnotations().addAll(oP.getParents());
+			}
+		}
+
+		// Diseases presenting at least one phenotype of the related diseases
+		// Used as a subset against which the symptoms minus the phenotype will
+		// be searched for similarities
+		Set<String> comparisonDiseasePool = new HashSet<String>();
+		comparisonDiseasePool.addAll(relatedDiseases);
+		for (String d : relatedDiseases) {
+			for (String p : this.annotation.getAnnotationNode(d)
+					.getOriginalAnnotations()) {
+				comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
+						.getNeighbors());
+			}
+		}
+
+		// check where each disease ranks in the pool
+		boolean canRemove = true;
+		for (String d : relatedDiseases) {
+			// acceptable rank for each disease when searching for its symptoms
+			int RANK_LIMIT = 1;
+			AnnotationTerm aD = this.annotation.getAnnotationNode(d);
+			// the phenotypes we're looking for
+			Set<String> annPhenotypes = new HashSet<String>();
+			annPhenotypes.addAll(aD.getOriginalAnnotations());
+
+			// their score for the taret disease
+			double targetDiseaseScore = predictor.getMatchScore(annPhenotypes,
+					d);
+			int crtRank = 1;
+			for (String cD : comparisonDiseasePool) {
+				if (predictor.getMatchScore(annPhenotypes, cD) > targetDiseaseScore) {
+					// increase rank every time we find a higher score in the
+					// comparison pool
+					// terminate if rank limit is reached
+					if (++crtRank > RANK_LIMIT) {
+						canRemove = false;
+						break;
+					}
+				}
+			}
+			if (!canRemove) {
+				break;
+			}
+		}
+		if (!canRemove) {
+			// undo changes dome to the annotation grph
+			for (String d : relatedDiseases) {
+				AnnotationTerm aD = this.annotation.getAnnotationNode(d);
+				aD.addNeighbor(aP);
+				if (aD.getOriginalAnnotations().add(phenotype)) {
+					aD.getOriginalAnnotations().removeAll(oP.getParents());
+				}
+			}
+			return false;
+		}
+		return true;
 	}
 }
