@@ -64,7 +64,7 @@ public class BottomUpAnnClustering {
 						.getSpecificity(item)));
 			}
 			Collections.sort(sortedResults);
-			Collections.reverse(sortedResults);
+			// Collections.reverse(sortedResults);
 			int lCount = 0;
 			for (SearchResult r : sortedResults) {
 				OntologyTerm term = this.ontology.getTerm(r.getId());
@@ -119,18 +119,36 @@ public class BottomUpAnnClustering {
 			}
 		}
 
+		// Diseases used as a subset against which the symptoms minus the
+		// phenotype will be searched for similarities
+		Set<String> comparisonDiseasePool = new HashSet<String>();
+		comparisonDiseasePool.addAll(relatedDiseases);
+
+		for (String p : oP.getParents()) {
+			comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
+					.getNeighbors());
+		}
+		progress(phenotype + ": Related diseases / Comparison pool",
+				relatedDiseases.size(), comparisonDiseasePool.size());
+
 		// Diseases presenting at least one phenotype of the related diseases
 		// Used as a subset against which the symptoms minus the phenotype will
 		// be searched for similarities
-		Set<String> comparisonDiseasePool = new HashSet<String>();
-		comparisonDiseasePool.addAll(relatedDiseases);
-		for (String d : relatedDiseases) {
-			for (String p : this.annotation.getAnnotationNode(d)
-					.getOriginalAnnotations()) {
-				comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
-						.getNeighbors());
-			}
-		}
+
+		// Set<String> relatedPhenotypes = new HashSet<String>();
+		// for (String p : oP.getParents()) {
+		// relatedPhenotypes.addAll(this.ontology.getTerm(p).getChildren());
+		// }
+		// relatedPhenotypes.addAll(oP.getParents());
+		// for (String p : relatedPhenotypes) {
+		// comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
+		// .getNeighbors());
+		/*
+		 * for (String d : relatedDiseases) { for (String p :
+		 * this.annotation.getAnnotationNode(d) .getOriginalAnnotations()) {
+		 * comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
+		 * .getNeighbors()); } }
+		 */
 
 		// check where each disease ranks in the pool
 		boolean canRemove = true;
@@ -172,6 +190,8 @@ public class BottomUpAnnClustering {
 			}
 			return false;
 		}
+
+		System.out.println(">>> REMOVED");
 		return true;
 	}
 }
