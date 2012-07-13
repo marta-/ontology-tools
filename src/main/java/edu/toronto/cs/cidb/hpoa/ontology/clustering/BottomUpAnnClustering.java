@@ -19,10 +19,18 @@
  */
 package edu.toronto.cs.cidb.hpoa.ontology.clustering;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
@@ -37,11 +45,25 @@ import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 
 public class BottomUpAnnClustering {
 	final Ontology ontology;
-	final HPOAnnotation annotation;
+	final HPOAnnotation annotation;;
+	final Predictor predictor = new ICPredictor();
+
+	private Map<String, Integer> ORIGINAL_RANKS = new HashMap<String, Integer>();
+	final private File rankDataSource;
+
+	// private rankData = new
 
 	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation) {
+		this(ontology, annotation, null);
+	}
+
+	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation,
+			File rankDataSource) {
 		this.ontology = ontology;
 		this.annotation = annotation;
+		this.predictor.setAnnotation(this.annotation);
+		this.rankDataSource = rankDataSource;
+		initOriginalRanks();
 	}
 
 	private void log(String msg) {
@@ -60,13 +82,68 @@ public class BottomUpAnnClustering {
 		System.out.println(msg + ": " + crt + "/" + total);
 	}
 
+	private void initOriginalRanks() {
+		int counter = 1, total = this.annotation.getAnnotationIds().size();
+		PrintStream out = System.out;
+		if (this.rankDataSource != null) {
+			if (this.rankDataSource.exists()) {
+				try {
+					BufferedReader in = new BufferedReader(new FileReader(
+							this.rankDataSource));
+					log("Reading OMIM ranks from "
+							+ this.rankDataSource.getAbsolutePath() + "...\n");
+					for (String d : this.annotation.getAnnotationIds()) {
+						this.ORIGINAL_RANKS.put(d, 1);
+					}
+					String line;
+					while ((line = in.readLine()) != null) {
+						String pieces[] = line.split("\t");
+						if (pieces.length == 3) {
+							int rank = 1;
+							try {
+								rank = Integer.parseInt(pieces[2]);
+							} catch (NumberFormatException e) {
+								rank = 1;
+							}
+							this.ORIGINAL_RANKS.put(pieces[1], rank);
+						}
+					}
+					in.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
+				try {
+					out = new PrintStream(this.rankDataSource);
+					log("Writing OMIM ranks to "
+							+ this.rankDataSource.getAbsolutePath() + "...\n");
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+		for (String d : this.annotation.getAnnotationIds()) {
+			int rank = this.predictor.getRankForOwnSymptoms(d);
+			out.println((counter++) + "/" + total + "\t" + d + "\t" + rank);
+			this.ORIGINAL_RANKS.put(d, rank);
+			out.flush();
+		}
+		if (!out.equals(System.out)) {
+			out.close();
+		}
+	}
+
 	public Ontology buttomUpCluster() {
 		int removedNodes = 0;
 		int removedArcs = 0;
 
-		Ontology ontology = this.ontology;// .clone();
-		Predictor p = new ICPredictor();
-		p.setAnnotation(this.annotation);
+		Ontology ontology = this.ontology;// .clone()
+		this.predictor.setAnnotation(this.annotation);
 
 		Set<String> crtLevel = new HashSet<String>();
 		Set<String> nextLevel = new HashSet<String>();
@@ -79,7 +156,7 @@ public class BottomUpAnnClustering {
 		while (!crtLevel.isEmpty()) {
 			List<SearchResult> sortedResults = new LinkedList<SearchResult>();
 			for (String item : crtLevel) {
-				sortedResults.add(new SearchResult(item, item, p
+				sortedResults.add(new SearchResult(item, item, this.predictor
 						.getSpecificity(item)));
 			}
 			Collections.sort(sortedResults);
@@ -91,7 +168,7 @@ public class BottomUpAnnClustering {
 					continue;
 				}
 				logln((++lCount) + "/" + crtLevel.size() + "\t" + term + "...");
-				if (remove(term.getId(), p)) {
+				if (remove(term.getId(), this.predictor)) {
 					logln("REMOVING: " + term);
 					removedNodes++;
 					removedArcs += term.getNeighborsCount();
@@ -173,7 +250,8 @@ public class BottomUpAnnClustering {
 		boolean canRemove = true;
 		for (String d : relatedDiseases) {
 			// acceptable rank for each disease when searching for its symptoms
-			int RANK_LIMIT = 1;
+			int RANK_LIMIT = this.ORIGINAL_RANKS.get(d) == null ? 1
+					: this.ORIGINAL_RANKS.get(d);
 			AnnotationTerm aD = this.annotation.getAnnotationNode(d);
 			// the phenotypes we're looking for
 			Set<String> annPhenotypes = new HashSet<String>();
@@ -184,7 +262,8 @@ public class BottomUpAnnClustering {
 					d);
 			int crtRank = 1;
 			for (String cD : comparisonDiseasePool) {
-				if (predictor.getMatchScore(annPhenotypes, cD) > targetDiseaseScore) {
+				double matchScore = predictor.getMatchScore(annPhenotypes, cD);
+				if (matchScore > targetDiseaseScore) {
 					// increase rank every time we find a higher score in the
 					// comparison pool
 					// terminate if rank limit is reached

@@ -21,8 +21,10 @@ package edu.toronto.cs.cidb.hpoa.prediction;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
@@ -91,5 +93,26 @@ public abstract class AbstractPredictor implements Predictor {
 			}
 		}
 		return -1;
+	}
+
+	public int getRankForOwnSymptoms(String resultID) {
+		int rank = 1;
+		List<String> annPhenotypes = this.annotations.getAnnotationNode(
+				resultID).getOriginalAnnotations();
+		double ownScore = getMatchScore(annPhenotypes, resultID);
+		Set<String> pool = new HashSet<String>();
+		for (String p : annPhenotypes) {
+			pool.addAll(this.annotations.getHPONode(p).getNeighbors());
+		}
+		// System.out.print(resultID + "\trank out of " + pool.size() + "/"
+		// + this.annotations.getAnnotationIds().size() + ":\t");
+		// pool.remove(resultID);
+		for (String d : pool) {
+			if (getMatchScore(annPhenotypes, d) > ownScore) {
+				++rank;
+			}
+		}
+		// System.out.println(rank);
+		return rank;
 	}
 }

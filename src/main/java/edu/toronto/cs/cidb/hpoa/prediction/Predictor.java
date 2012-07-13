@@ -61,4 +61,6 @@ public interface Predictor {
 	public double getMatchScore(Collection<String> phenotypes, String result);
 
 	public double getSpecificity(String item);
+
+	public int getRankForOwnSymptoms(String resultID);
 }

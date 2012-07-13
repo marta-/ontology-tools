@@ -30,7 +30,6 @@ import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
-import edu.toronto.cs.cidb.hpoa.ontology.HPO;
 import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
 
 public class ICPredictor extends AbstractPredictor {
@@ -67,12 +66,14 @@ public class ICPredictor extends AbstractPredictor {
 
 	public String getMICAId(String hpoId1, String hpoId2) {
 		// TODO: implement more efficiently!
-		Set<String> common = new HashSet<String>();
-		common.addAll(this.annotations.getOntology().getAncestors(hpoId1));
-		common.retainAll(this.annotations.getOntology().getAncestors(hpoId2));
+		Set<String> intersection = new HashSet<String>();
+		intersection
+				.addAll(this.annotations.getOntology().getAncestors(hpoId1));
+		intersection.retainAll(this.annotations.getOntology().getAncestors(
+				hpoId2));
 		double max = -1;
 		String micaId = this.annotations.getOntology().getRootId();
-		for (String a : common) {
+		for (String a : intersection) {
 			double ic = this.getIC(a);
 			if (ic >= max) {
 				max = ic;
@@ -128,32 +129,6 @@ public class ICPredictor extends AbstractPredictor {
 		return this.asymmetricPhenotypeSimilarity(phenotypes, annPhenotypes)
 				/ this.asymmetricPhenotypeSimilarity(annPhenotypes,
 						annPhenotypes);
-	}
-
-	public double getRelevance(String phenotype, String resultID) {
-		double relevance = 0;
-		List<String> annPhenotypes = new LinkedList<String>();
-		annPhenotypes.addAll(this.annotations.getAnnotationNode(resultID)
-				.getOriginalAnnotations());
-		if (annPhenotypes.remove(phenotype)) {
-			// HPO.getInstance().
-
-		}
-		return relevance;
-	}
-
-	public SearchResult getReplacement(String phenotype, String resultID) {
-		double relevance = 0;
-		List<String> annPhenotypes = new LinkedList<String>();
-		annPhenotypes.addAll(this.annotations.getAnnotationNode(resultID)
-				.getOriginalAnnotations());
-		if (annPhenotypes.remove(phenotype)) {
-			HPO.getInstance().getTerm(phenotype).getParents();
-
-			// return new SearchResult("", "", score);
-
-		}
-		return null;
 	}
 
 	@Override

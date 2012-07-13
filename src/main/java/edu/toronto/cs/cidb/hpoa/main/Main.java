@@ -43,7 +43,8 @@ public class Main {
 						"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_annotation.tab",
 						false));
 
-		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann);
+		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann,
+				getTemporaryFile("omim_symptoms_rank_data"));
 		mfp.buttomUpCluster().display(System.out);
 	}
 
