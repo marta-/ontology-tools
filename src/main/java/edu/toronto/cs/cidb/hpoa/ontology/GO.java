@@ -19,15 +19,8 @@
  */
 package edu.toronto.cs.cidb.hpoa.ontology;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 
-@Component
-@Named("hpo")
-@Singleton
 public class GO extends AbstractOntology implements Initializable {
 
 	private static GO instance;

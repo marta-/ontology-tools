@@ -24,11 +24,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.xwiki.component.annotation.ComponentRole;
-
 import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
 
-@ComponentRole
 public interface HPOAnnotation {
 	public int load(File source);
 

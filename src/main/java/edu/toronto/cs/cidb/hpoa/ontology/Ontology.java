@@ -24,13 +24,10 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 
-import org.xwiki.component.annotation.ComponentRole;
-
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
 import edu.toronto.cs.cidb.solr.SolrScriptService;
 
-@ComponentRole
 public interface Ontology {
 	public abstract int load(SolrScriptService source);
 

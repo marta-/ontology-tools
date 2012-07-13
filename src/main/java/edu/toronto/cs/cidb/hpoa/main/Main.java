@@ -43,33 +43,8 @@ public class Main {
 						"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_annotation.tab",
 						false));
 
-		// hpo.display(System.out);
 		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann);
 		mfp.buttomUpCluster().display(System.out);
-		// int min = ann.getAnnotationIds().size(), max = 0;
-		// double avg = 0;
-		// CounterMap<Integer> h = new CounterMap<Integer>();
-		// for (String d : ann.getAnnotationIds()) {
-		// Set<String> related = new HashSet<String>();
-		// for (String s : ann.getAnnotationNode(d).getOriginalAnnotations()) {
-		// related.addAll(ann.getNeighborIds(s));
-		// }
-		// if (min > related.size()) {
-		// min = related.size();
-		// }
-		// if (max < related.size()) {
-		// max = related.size();
-		// }
-		// avg += related.size();
-		// h.addTo(related.size());
-		// }
-		// avg /= ann.getAnnotationIds().size();
-		// PrintStream out = System.out;
-		// out.println(h);
-		// out.println();
-		// out.println("MIN: " + min);
-		// out.println("MAX: " + max);
-		// out.println("AVG: " + avg);
 	}
 
 	public static File getInputFileHandler(String inputLocation,

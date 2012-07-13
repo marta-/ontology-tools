@@ -28,19 +28,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.xwiki.component.annotation.Component;
-
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 import edu.toronto.cs.cidb.hpoa.ontology.HPO;
 import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
 
-@Component
-@Named("ic")
-@Singleton
 public class ICPredictor extends AbstractPredictor {
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 

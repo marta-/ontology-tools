@@ -24,7 +24,6 @@ import java.util.Collections;
 
 import edu.toronto.cs.cidb.hpoa.utils.maps.SetMap;
 
-
 public class TermData extends SetMap<String, String> {
 	private static final long serialVersionUID = 4880377023212693352L;
 

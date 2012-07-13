@@ -22,12 +22,9 @@ package edu.toronto.cs.cidb.hpoa.prediction;
 import java.util.Collection;
 import java.util.List;
 
-import org.xwiki.component.annotation.ComponentRole;
-
 import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 
-@ComponentRole
 public interface Predictor {
 	/**
 	 * Obtains the list of OMIM diseases that fit a set of phenotypes, ordered

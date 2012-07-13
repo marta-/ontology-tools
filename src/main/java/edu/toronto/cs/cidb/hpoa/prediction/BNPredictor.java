@@ -22,16 +22,8 @@ package edu.toronto.cs.cidb.hpoa.prediction;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.xwiki.component.annotation.Component;
-
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 
-@Component
-@Named("bn")
-@Singleton
 public class BNPredictor extends AbstractPredictor {
 	@Override
 	public List<SearchResult> getMatches(Collection<String> phenotypes) {
