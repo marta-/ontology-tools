@@ -50,36 +50,46 @@ public class BottomUpAnnClustering {
 
 	private Map<String, Integer> ORIGINAL_RANKS = new HashMap<String, Integer>();
 	final private File rankDataSource;
+	private PrintStream log = System.out;
 
 	// private rankData = new
 
 	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation) {
-		this(ontology, annotation, null);
+		this(ontology, annotation, null, null);
 	}
 
 	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation,
-			File rankDataSource) {
+			File rankDataSource, File log) {
 		this.ontology = ontology;
 		this.annotation = annotation;
 		this.predictor.setAnnotation(this.annotation);
 		this.rankDataSource = rankDataSource;
 		initOriginalRanks();
+		if (log != null) {
+			try {
+				this.log = new PrintStream(log);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				this.log = System.out;
+			}
+		}
 	}
 
 	private void log(String msg) {
-		System.out.print(msg);
+		this.log.print(msg);
 	}
 
 	private void logln(String msg) {
-		// System.out.println(msg);
+		// log.println(msg);
 	}
 
 	private void logln() {
-		// System.out.println();
+		// log.println();
 	}
 
 	private void progress(String msg, int crt, int total) {
-		System.out.println(msg + ": " + crt + "/" + total);
+		this.log.println(msg + ": " + crt + "/" + total);
 	}
 
 	private void initOriginalRanks() {
@@ -111,11 +121,14 @@ public class BottomUpAnnClustering {
 					in.close();
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
+					progress("????", 1, 2);
 					e.printStackTrace();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
+					progress("????", 2, 2);
 					e.printStackTrace();
 				}
+				return;
 			} else {
 				try {
 					out = new PrintStream(this.rankDataSource);
@@ -289,7 +302,7 @@ public class BottomUpAnnClustering {
 			return false;
 		}
 
-		System.out.println(">>> REMOVED");
+		progress(">>> REMOVED", 1, 1);
 		return true;
 	}
 }

@@ -20,7 +20,6 @@
 package edu.toronto.cs.cidb.hpoa.ontology;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 
@@ -53,6 +52,8 @@ public interface Ontology {
 
 	public abstract int size();
 
-	public void display(PrintStream out);
+	public void display();
+
+	public void display(File out);
 
 }

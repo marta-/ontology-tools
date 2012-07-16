@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.sql.Date;
 
 import org.apache.commons.io.IOUtils;
 
@@ -44,8 +45,12 @@ public class Main {
 						false));
 
 		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann,
-				getTemporaryFile("omim_symptoms_rank_data"));
-		mfp.buttomUpCluster().display(System.out);
+				getTemporaryFile("omim_symptoms_rank_data"),
+				getTemporaryFile("log_"
+						+ new Date(System.currentTimeMillis()).toString()));
+		mfp.buttomUpCluster().display(
+				getTemporaryFile("out_"
+						+ new Date(System.currentTimeMillis()).toString()));
 	}
 
 	public static File getInputFileHandler(String inputLocation,

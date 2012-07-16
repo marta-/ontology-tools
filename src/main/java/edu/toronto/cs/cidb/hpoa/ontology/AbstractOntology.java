@@ -344,7 +344,23 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 		return new File(parent, name);
 	}
 
-	public void display(PrintStream out) {
+	public void display() {
+		display(System.out);
+	}
+
+	public void display(File out) {
+		try {
+			PrintStream p = new PrintStream(out);
+			display(p);
+			p.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			display(System.out);
+		}
+	}
+
+	protected void display(PrintStream out) {
 		Map<String, Boolean> visited = new HashMap<String, Boolean>();
 		Set<String> crt = new TreeSet<String>();
 		Set<String> next = new TreeSet<String>();
