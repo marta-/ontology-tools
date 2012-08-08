@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -41,6 +43,8 @@ import edu.toronto.cs.cidb.hpoa.ontology.HPO;
 import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
 import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
 import edu.toronto.cs.cidb.hpoa.ontology.clustering.BottomUpAnnClustering;
+import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
+import edu.toronto.cs.cidb.hpoa.prediction.Predictor;
 import edu.toronto.cs.cidb.hpoa.utils.maps.SetMap;
 
 public class Main {
@@ -54,6 +58,59 @@ public class Main {
 						false));
 
 		clusterOntology(hpo, ann);
+
+	}
+
+	protected static void generateSimilarityScores(HPOAnnotation ann,
+			String[] args) {
+		Predictor p = new ICPredictor();
+		p.setAnnotation(ann);
+		if (args.length == 0) {
+			return;
+		}
+		String inputFileName = args[0], outputFileName = "";
+		if (args.length > 1) {
+			outputFileName = args[1];
+		} else {
+			outputFileName = inputFileName + ".out";
+		}
+
+		try {
+			BufferedReader in = new BufferedReader(
+					new FileReader(inputFileName));
+			PrintStream out = new PrintStream(outputFileName);
+			String line;
+			int EXPECTED_LINE_PIECES = 2;
+			int ANNOTATION_SET_POSITION = 0;
+			int QUERY_SET_POSITION = 0;
+			String SET_SEPARATOR = "\t+", ITEM_SEPARATOR = "\\s*[, ]\\s*";
+			int counter = 0;
+			while ((line = in.readLine()) != null) {
+				++counter;
+				String pieces[] = line.split(SET_SEPARATOR);
+				if (pieces.length < EXPECTED_LINE_PIECES) {
+					System.err.println("Unexpected format for line " + counter
+							+ ":\n" + line + "\n\n");
+					continue;
+				}
+				List<String> query = Arrays.asList(pieces[QUERY_SET_POSITION]
+						.split(ITEM_SEPARATOR));
+				List<String> ref = Arrays
+						.asList(pieces[ANNOTATION_SET_POSITION]
+								.split(ITEM_SEPARATOR));
+				out.println(line + "\t" + p.getSimilarityScore(query, ref)
+						+ "\n");
+			}
+			out.flush();
+			out.close();
+			in.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 

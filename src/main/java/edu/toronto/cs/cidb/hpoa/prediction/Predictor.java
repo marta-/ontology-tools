@@ -51,6 +51,9 @@ public interface Predictor {
 	public List<SearchResult> getDifferentialPhenotypes(
 			Collection<String> phenotypes);
 
+	public double getSimilarityScore(Collection<String> query,
+			Collection<String> reference);
+
 	public void setAnnotation(HPOAnnotation annotation);
 
 	public int getMatchRank(Collection<String> phenotypes, String result);

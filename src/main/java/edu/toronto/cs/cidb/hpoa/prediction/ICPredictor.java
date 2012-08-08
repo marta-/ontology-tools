@@ -105,6 +105,11 @@ public class ICPredictor extends AbstractPredictor {
 				* asymmetricPhenotypeSimilarity(reference, query);
 	}
 
+	public double getSimilarityScore(Collection<String> query,
+			Collection<String> reference) {
+		return this.asymmetricPhenotypeSimilarity(query, reference);
+	}
+
 	@Override
 	public List<SearchResult> getMatches(Collection<String> phenotypes) {
 		List<SearchResult> result = new LinkedList<SearchResult>();

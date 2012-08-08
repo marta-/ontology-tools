@@ -42,4 +42,11 @@ public class BNPredictor extends AbstractPredictor {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public double getSimilarityScore(Collection<String> query,
+			Collection<String> reference) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
