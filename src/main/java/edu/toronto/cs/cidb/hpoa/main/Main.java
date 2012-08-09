@@ -57,8 +57,8 @@ public class Main {
 						"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_annotation.tab",
 						false));
 
-		//clusterOntology(hpo, ann);
-                generateSimilarityScores(ann, args);
+		// clusterOntology(hpo, ann);
+		generateSimilarityScores(ann, args);
 
 	}
 
@@ -88,9 +88,9 @@ public class Main {
 			int counter = 0;
 			while ((line = in.readLine()) != null) {
 				++counter;
-                                if (line.startsWith(COMMENT_MARKER)) {
-                                        continue;
-                                }
+				if (line.startsWith(COMMENT_MARKER)) {
+					continue;
+				}
 				String pieces[] = line.split(SET_SEPARATOR);
 				if (pieces.length < EXPECTED_LINE_PIECES) {
 					System.err.println("Unexpected format for line " + counter
