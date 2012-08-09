@@ -19,9 +19,7 @@
  */
 package edu.toronto.cs.cidb.hpoa.ontology;
 
-import org.xwiki.component.phase.Initializable;
-
-public class GO extends AbstractOntology implements Initializable {
+public class GO extends AbstractOntology {
 
 	private static GO instance;
 
