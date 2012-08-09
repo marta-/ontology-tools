@@ -1,0 +1,8 @@
+## Lines starting with '##' and empty lines are ignored
+## Columns must be separated by '\t'
+## Column 1 is the 'query' phenotype set, Column 2 is the reference (annotation) phenotype set
+## Items within these sets must be separated by ',' or ' '
+## All columns following the first two are ignored, but their contents are copied in the output file
+##
+HP:0000368,HP:0000775	HP:0000878,HP:0010866,HP:0003330,HP:0003312,HP:0000357	LBR
+HP:0003241 HP:0003344	HP:0003535,HP:0000811	ATPAF2
