@@ -82,7 +82,7 @@ public class Main {
 			PrintStream out = new PrintStream(outputFileName);
 			String line;
 			int EXPECTED_LINE_PIECES = 2;
-			int ANNOTATION_SET_POSITION = 0;
+			int ANNOTATION_SET_POSITION = 1;
 			int QUERY_SET_POSITION = 0;
 			String SET_SEPARATOR = "\t+", ITEM_SEPARATOR = "\\s*[, ]\\s*", COMMENT_MARKER = "##";
 			int counter = 0;
@@ -102,6 +102,8 @@ public class Main {
 				List<String> ref = Arrays
 						.asList(pieces[ANNOTATION_SET_POSITION]
 								.split(ITEM_SEPARATOR));
+				// System.err.println(query);
+				// System.err.println(ref);
 				out.println(line + "\t" + p.getSimilarityScore(query, ref));
 			}
 			out.flush();
