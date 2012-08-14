@@ -19,6 +19,7 @@
  */
 package edu.toronto.cs.cidb.hpoa.prediction;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,13 +31,42 @@ import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
+import edu.toronto.cs.cidb.hpoa.ontology.HPO;
 import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
 
 public class ICPredictor extends AbstractPredictor {
+	private static final boolean ENABLE_CUMMULATIVE_IC = true;
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 
 	public double getIC(String hpoId) {
 		return getIC(this.annotations.getHPONode(hpoId));
+	}
+
+	private double getCummulativeIC(List<AnnotationTerm> hpoNodes) {
+		// return hpoNode == null ? 0 : getCachedIC(hpoNode);
+		double result = 0;
+
+		int firstIndex = 0;
+		AnnotationTerm first = null;
+		while (firstIndex < hpoNodes.size()
+				&& (first = hpoNodes.get(firstIndex++)) == null) {
+			;
+		}
+		if (first == null) {
+			return result;
+		}
+		for (String ann : first.getNeighbors()) {
+			double countMe = 1;
+			for (int i = firstIndex; i < hpoNodes.size(); ++i) {
+				if (hpoNodes.get(i) != null
+						&& !hpoNodes.get(i).hasNeighbor(ann)) {
+					countMe = 0;
+					break;
+				}
+			}
+			result += countMe;
+		}
+		return -Math.log(result / this.annotations.getAnnotations().size());
 	}
 
 	private double getIC(AnnotationTerm hpoNode) {
@@ -83,13 +113,39 @@ public class ICPredictor extends AbstractPredictor {
 		return micaId;
 	}
 
+	public List<AnnotationTerm> getMICAIds(String hpoId1, String hpoId2) {
+		// TODO: implement more efficiently!
+		List<AnnotationTerm> result = new ArrayList<AnnotationTerm>();
+
+		Set<String> intersection = new HashSet<String>();
+		intersection
+				.addAll(this.annotations.getOntology().getAncestors(hpoId1));
+		intersection.retainAll(this.annotations.getOntology().getAncestors(
+				hpoId2));
+		double max = -1;
+		String micaId = this.annotations.getOntology().getRootId();
+		while (intersection.size() > 0) {
+			for (String a : intersection) {
+				double ic = this.getIC(a);
+				if (ic >= max) {
+					max = ic;
+					micaId = a;
+				}
+			}
+			result.add(this.annotations.getHPONode(micaId));
+			intersection.removeAll(HPO.getInstance().getAncestors(micaId));
+		}
+		return result;
+	}
+
 	public double asymmetricPhenotypeSimilarity(Collection<String> query,
 			Collection<String> reference) {
 		double result = 0.0;
 		for (String q : query) {
 			double bestMatchIC = 0;
 			for (String r : reference) {
-				double ic = this.getIC(this.getMICAId(q, r));
+				double ic = ENABLE_CUMMULATIVE_IC ? this.getCummulativeIC(this
+						.getMICAIds(q, r)) : this.getIC(this.getMICAId(q, r));
 				if (ic > bestMatchIC) {
 					bestMatchIC = ic;
 				}
