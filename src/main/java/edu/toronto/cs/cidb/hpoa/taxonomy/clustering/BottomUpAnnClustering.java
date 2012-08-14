@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package edu.toronto.cs.cidb.hpoa.ontology.clustering;
+package edu.toronto.cs.cidb.hpoa.taxonomy.clustering;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,18 +34,18 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
-import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
-import edu.toronto.cs.cidb.hpoa.ontology.HPO;
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
-import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
+import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
 import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
 import edu.toronto.cs.cidb.hpoa.prediction.Predictor;
+import edu.toronto.cs.cidb.hpoa.taxonomy.HPO;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
+import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 
 public class BottomUpAnnClustering {
-	final Ontology ontology;
-	final HPOAnnotation annotation;;
+	final Taxonomy taxonomy;
+	final TaxonomyAnnotation annotation;;
 	final Predictor predictor = new ICPredictor();
 
 	private Map<String, Integer> ORIGINAL_RANKS = new HashMap<String, Integer>();
@@ -54,13 +54,14 @@ public class BottomUpAnnClustering {
 
 	// private rankData = new
 
-	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation) {
-		this(ontology, annotation, null, null);
+	public BottomUpAnnClustering(Taxonomy taxonomy,
+			TaxonomyAnnotation annotation) {
+		this(taxonomy, annotation, null, null);
 	}
 
-	public BottomUpAnnClustering(Ontology ontology, HPOAnnotation annotation,
-			File rankDataSource, File log) {
-		this.ontology = ontology;
+	public BottomUpAnnClustering(Taxonomy taxonomy,
+			TaxonomyAnnotation annotation, File rankDataSource, File log) {
+		this.taxonomy = taxonomy;
 		this.annotation = annotation;
 		this.predictor.setAnnotation(this.annotation);
 		this.rankDataSource = rankDataSource;
@@ -141,7 +142,7 @@ public class BottomUpAnnClustering {
 
 		}
 		for (String d : this.annotation.getAnnotationIds()) {
-			int rank = this.predictor.getRankForOwnSymptoms(d);
+			int rank = this.predictor.getRankForOwnTaxonomyTerms(d);
 			out.println((counter++) + "/" + total + "\t" + d + "\t" + rank);
 			this.ORIGINAL_RANKS.put(d, rank);
 			out.flush();
@@ -151,16 +152,16 @@ public class BottomUpAnnClustering {
 		}
 	}
 
-	public Ontology buttomUpCluster() {
+	public Taxonomy buttomUpCluster() {
 		int removedNodes = 0;
 		int removedArcs = 0;
 
-		Ontology ontology = this.ontology;// .clone()
+		Taxonomy taxonomy = this.taxonomy;// .clone()
 		this.predictor.setAnnotation(this.annotation);
 
 		Set<String> crtLevel = new HashSet<String>();
 		Set<String> nextLevel = new HashSet<String>();
-		for (DAGNode t : this.ontology.getLeaves()) {
+		for (DAGNode t : this.taxonomy.getLeaves()) {
 			// System.out.println("L0 " + t.getId() + " " + t.getName());
 			crtLevel.add(t.getId());
 		}
@@ -176,7 +177,7 @@ public class BottomUpAnnClustering {
 			// Collections.reverse(sortedResults);
 			int lCount = 0;
 			for (SearchResult r : sortedResults) {
-				OntologyTerm term = this.ontology.getTerm(r.getId());
+				TaxonomyTerm term = this.taxonomy.getTerm(r.getId());
 				if (term == null) {
 					continue;
 				}
@@ -186,16 +187,16 @@ public class BottomUpAnnClustering {
 					removedNodes++;
 					removedArcs += term.getNeighborsCount();
 					for (String n : term.getParents()) {
-						if (ontology.getTerm(n).getChildren().size() == 1) {
-							nextLevel.add(ontology.getRealId(n));
+						if (taxonomy.getTerm(n).getChildren().size() == 1) {
+							nextLevel.add(taxonomy.getRealId(n));
 						}
 					}
-					ontology.removeNode(term.getId());
+					taxonomy.removeNode(term.getId());
 
 				}
 				if (lCount % 10 == 0 || lCount == crtLevel.size()) {
 					progress("Level:   ", lCount, crtLevel.size());
-					progress("Removed: ", removedNodes, ontology.size());
+					progress("Removed: ", removedNodes, taxonomy.size());
 				}
 			}
 			logln("REMOVED: " + removedNodes + "n " + removedArcs + "a");
@@ -204,16 +205,16 @@ public class BottomUpAnnClustering {
 			nextLevel.clear();
 		}
 		logln("TOTAL REMOVED: " + removedNodes + "n " + removedArcs + "a");
-		progress("TOTAL REMOVED: ", removedNodes, ontology.size());
-		return ontology;
+		progress("TOTAL REMOVED: ", removedNodes, taxonomy.size());
+		return taxonomy;
 	}
 
 	protected boolean remove(String phenotype, Predictor predictor) {
-		AnnotationTerm aP = this.annotation.getHPONode(phenotype);
+		AnnotationTerm aP = this.annotation.getTaxonomyNode(phenotype);
 		if (aP == null) {
 			return true;
 		}
-		OntologyTerm oP = HPO.getInstance().getTerm(phenotype);
+		TaxonomyTerm oP = HPO.getInstance().getTerm(phenotype);
 
 		// Diseases presenting this phenotype
 		Set<String> relatedDiseases = new HashSet<String>();
@@ -234,30 +235,11 @@ public class BottomUpAnnClustering {
 		comparisonDiseasePool.addAll(relatedDiseases);
 
 		for (String p : oP.getParents()) {
-			comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
+			comparisonDiseasePool.addAll(this.annotation.getTaxonomyNode(p)
 					.getNeighbors());
 		}
 		progress(phenotype + ": Related diseases / Comparison pool",
 				relatedDiseases.size(), comparisonDiseasePool.size());
-
-		// Diseases presenting at least one phenotype of the related diseases
-		// Used as a subset against which the symptoms minus the phenotype will
-		// be searched for similarities
-
-		// Set<String> relatedPhenotypes = new HashSet<String>();
-		// for (String p : oP.getParents()) {
-		// relatedPhenotypes.addAll(this.ontology.getTerm(p).getChildren());
-		// }
-		// relatedPhenotypes.addAll(oP.getParents());
-		// for (String p : relatedPhenotypes) {
-		// comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
-		// .getNeighbors());
-		/*
-		 * for (String d : relatedDiseases) { for (String p :
-		 * this.annotation.getAnnotationNode(d) .getOriginalAnnotations()) {
-		 * comparisonDiseasePool.addAll(this.annotation.getHPONode(p)
-		 * .getNeighbors()); } }
-		 */
 
 		// check where each disease ranks in the pool
 		boolean canRemove = true;

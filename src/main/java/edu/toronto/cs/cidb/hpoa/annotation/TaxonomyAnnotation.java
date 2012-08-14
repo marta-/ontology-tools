@@ -24,28 +24,28 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 
-public interface HPOAnnotation {
+public interface TaxonomyAnnotation {
 	public int load(File source);
 
-	public Ontology getOntology();
+	public Taxonomy getTaxonomy();
 
 	public Set<String> getAnnotationIds();
 
-	public Set<String> getHPONodesIds();
+	public Set<String> getTaxonomyNodesIds();
 
 	public Collection<AnnotationTerm> getAnnotations();
 
-	public Collection<AnnotationTerm> getAnnotations(String hpoId);
+	public Collection<AnnotationTerm> getAnnotations(String taxonomyID);
 
-	public Collection<AnnotationTerm> getHPONodes();
+	public Collection<AnnotationTerm> getTaxonomyNodes();
 
 	public AnnotationTerm getAnnotationNode(String annId);
 
-	public AnnotationTerm getHPONode(String id);
+	public AnnotationTerm getTaxonomyNode(String id);
 
-	public Map<String, String> getPhenotypesWithAnnotation(String annId);
+	public Map<String, String> getTaxonomyTermsWithAnnotation(String annId);
 
 	public void addConnection(AnnotationTerm lNode, AnnotationTerm rNode);
 }

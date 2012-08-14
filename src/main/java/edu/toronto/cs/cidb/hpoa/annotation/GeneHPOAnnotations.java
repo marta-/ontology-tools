@@ -31,11 +31,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
-public class GeneHPOAnnotations extends AbstractHPOAnnotation {
+public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
 	public static final Side GENE = BGraph.Side.L;
+	public static final Side HPO = BGraph.Side.R;
 
 	private static final String COMMENT_MARKER = "#";
 
@@ -53,7 +54,7 @@ public class GeneHPOAnnotations extends AbstractHPOAnnotation {
 
 	private static final int LIST_IDX = 3;
 
-	public GeneHPOAnnotations(Ontology hpo) {
+	public GeneHPOAnnotations(Taxonomy hpo) {
 		super(hpo);
 	}
 
@@ -76,7 +77,8 @@ public class GeneHPOAnnotations extends AbstractHPOAnnotation {
 				Matcher m = ANNOTATION_REG_EXP.matcher(line);
 				if (m.find()) {
 					// String hpoName = m.group(NAME_IDX);
-					final String hpoId = this.hpo.getRealId(m.group(ID_IDX));
+					final String hpoId = this.taxonomy.getRealId(m
+							.group(ID_IDX));
 					String geneList = m.group(LIST_IDX);
 					if (geneList != null) {
 						final Matcher mi = GENE_REG_EXP.matcher(geneList);
@@ -84,13 +86,13 @@ public class GeneHPOAnnotations extends AbstractHPOAnnotation {
 							connection.clear();
 							connection.put(GENE, new AnnotationTerm(mi
 									.group(ID_IDX), mi.group(NAME_IDX)));
-							connection.put(HPO, new AnnotationTerm(hpoId));
+							connection.put(TAXONOMY, new AnnotationTerm(hpoId));
 						}
 					}
 				}
 			}
 			in.close();
-			propagateHPOAnnotations();
+			propagateTaxonomyAnnotations();
 		} catch (NullPointerException ex) {
 			ex.printStackTrace();
 			System.err.println("File does not exist");
@@ -115,5 +117,17 @@ public class GeneHPOAnnotations extends AbstractHPOAnnotation {
 
 	public AnnotationTerm getGeneNode(String geneId) {
 		return this.getNode(geneId, GENE);
+	}
+
+	public Set<String> getHPONodesIds() {
+		return this.getNodesIds(HPO);
+	}
+
+	public Collection<AnnotationTerm> getHPONodes() {
+		return this.getNodes(HPO);
+	}
+
+	public AnnotationTerm getHPONode(String omimId) {
+		return this.getNode(omimId, HPO);
 	}
 }

@@ -24,15 +24,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.toronto.cs.cidb.hpoa.ontology.HPO;
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
-import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
+import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.graph.Node;
 
 public class AnnotationTerm extends Node {
 
-	private OntologyTerm ontologyTerm;
+	private TaxonomyTerm taxonomyTerm;
+	private Taxonomy taxonomy = null;
 
 	private List<String> originalAnnotations = new LinkedList<String>();
 
@@ -44,19 +44,21 @@ public class AnnotationTerm extends Node {
 		super(id, name);
 	}
 
-	public void setOntologyTerm(OntologyTerm ontologyTerm) {
-		this.ontologyTerm = ontologyTerm;
+	public void setTaxonomyTerm(TaxonomyTerm taxonomyTerm) {
+		this.taxonomyTerm = taxonomyTerm;
 	}
 
-	public OntologyTerm getOntologyTerm() {
-		return this.ontologyTerm;
+	public TaxonomyTerm getTaxonomyyTerm() {
+		return this.taxonomyTerm;
 	}
 
 	public List<String> getOriginalAnnotations() {
 		return this.originalAnnotations;
 	}
 
-	protected void propagateAnnotations(HPOAnnotation ann) {
+	protected void propagateAnnotations(TaxonomyAnnotation ann,
+			Taxonomy taxonomy) {
+		this.taxonomy = taxonomy;
 		this.originalAnnotations.addAll(this.getNeighbors());
 
 		Set<String> newAnnotations = new HashSet<String>();
@@ -66,10 +68,11 @@ public class AnnotationTerm extends Node {
 		Set<String> newFront = new HashSet<String>();
 		while (!front.isEmpty()) {
 			for (String nextTermId : front) {
-				IDAGNode nextNode = HPO.getInstance().getTerm(nextTermId);
+				IDAGNode nextNode = taxonomy.getTerm(nextTermId);
 				if (nextNode == null) {
-					System.err.println("No matching term found in HPO for "
-							+ nextTermId + " (" + this + ")");
+					System.err
+							.println("No matching term found in the taxonomy for "
+									+ nextTermId + " (" + this + ")");
 					continue;
 				}
 				for (String parentTermId : nextNode.getParents()) {
@@ -84,20 +87,23 @@ public class AnnotationTerm extends Node {
 			newFront.clear();
 		}
 		newAnnotations.removeAll(this.getNeighbors());
-		for (String hpoId : newAnnotations) {
-			ann.addConnection(this, new AnnotationTerm(HPO.getInstance()
-					.getRealId(hpoId)));
+		for (String tID : newAnnotations) {
+			ann
+					.addConnection(this, new AnnotationTerm(taxonomy
+							.getRealId(tID)));
 		}
 	}
 
 	@Override
 	public String toString() {
-		Ontology hpo = HPO.getInstance();
 		StringBuilder str = new StringBuilder();
 		str.append(this.id).append(" ").append(this.name).append("\n");
 		for (String nodeId : this.getNeighbors()) {
-			str.append("            ").append(nodeId).append("\t").append(
-					hpo.getName(nodeId)).append("\n");
+			str.append("            ").append(nodeId);
+			if (this.taxonomy != null) {
+				str.append("\t").append(this.taxonomy.getName(nodeId));
+			}
+			str.append("\n");
 		}
 		return str.toString();
 	}

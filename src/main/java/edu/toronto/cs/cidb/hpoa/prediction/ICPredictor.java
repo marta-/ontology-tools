@@ -31,25 +31,23 @@ import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
-import edu.toronto.cs.cidb.hpoa.ontology.HPO;
-import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
+import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 
 public class ICPredictor extends AbstractPredictor {
 	private static final boolean ENABLE_CUMMULATIVE_IC = true;
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 
-	public double getIC(String hpoId) {
-		return getIC(this.annotations.getHPONode(hpoId));
+	public double getIC(String taxonomyTermID) {
+		return getIC(this.annotations.getTaxonomyNode(taxonomyTermID));
 	}
 
-	private double getCummulativeIC(List<AnnotationTerm> hpoNodes) {
-		// return hpoNode == null ? 0 : getCachedIC(hpoNode);
+	private double getCummulativeIC(List<AnnotationTerm> taxonomyTerms) {
 		double result = 0;
 
 		int firstIndex = 0;
 		AnnotationTerm first = null;
-		while (firstIndex < hpoNodes.size()
-				&& (first = hpoNodes.get(firstIndex++)) == null) {
+		while (firstIndex < taxonomyTerms.size()
+				&& (first = taxonomyTerms.get(firstIndex++)) == null) {
 			;
 		}
 		if (first == null) {
@@ -57,9 +55,9 @@ public class ICPredictor extends AbstractPredictor {
 		}
 		for (String ann : first.getNeighbors()) {
 			double countMe = 1;
-			for (int i = firstIndex; i < hpoNodes.size(); ++i) {
-				if (hpoNodes.get(i) != null
-						&& !hpoNodes.get(i).hasNeighbor(ann)) {
+			for (int i = firstIndex; i < taxonomyTerms.size(); ++i) {
+				if (taxonomyTerms.get(i) != null
+						&& !taxonomyTerms.get(i).hasNeighbor(ann)) {
 					countMe = 0;
 					break;
 				}
@@ -69,40 +67,40 @@ public class ICPredictor extends AbstractPredictor {
 		return -Math.log(result / this.annotations.getAnnotations().size());
 	}
 
-	private double getIC(AnnotationTerm hpoNode) {
-		// return hpoNode == null ? 0 : getCachedIC(hpoNode);
-		return hpoNode == null ? 0 : -Math.log((double) hpoNode
+	private double getIC(AnnotationTerm taxonomyTerm) {
+		// return taxonomyTerm == null ? 0 : getCachedIC(taxonomyTerm);
+		return taxonomyTerm == null ? 0 : -Math.log((double) taxonomyTerm
 				.getNeighborsCount()
 				/ this.annotations.getAnnotations().size());
 	}
 
-	private double getCachedIC(AnnotationTerm hpoNode) {
-		Double result = this.icCache.get(hpoNode.getId());
+	private double getCachedIC(AnnotationTerm taxonomyTerm) {
+		Double result = this.icCache.get(taxonomyTerm.getId());
 		if (result == null) {
-			result = -Math.log((double) hpoNode.getNeighborsCount()
+			result = -Math.log((double) taxonomyTerm.getNeighborsCount()
 					/ this.annotations.getAnnotations().size());
-			this.icCache.put(hpoNode.getId(), result);
+			this.icCache.put(taxonomyTerm.getId(), result);
 		}
 		return result;
 	}
 
-	public OntologyTerm getMICA(String hpoId1, String hpoId2) {
-		String micaId = getMICAId(hpoId1, hpoId2);
+	public TaxonomyTerm getMICA(String taxonomyTerm1, String taxonomyTerm2) {
+		String micaId = getMICAId(taxonomyTerm1, taxonomyTerm2);
 		if (micaId != null) {
-			return this.annotations.getOntology().getTerm(micaId);
+			return this.annotations.getTaxonomy().getTerm(micaId);
 		}
 		return null;
 	}
 
-	public String getMICAId(String hpoId1, String hpoId2) {
+	public String getMICAId(String taxonomyTerm1, String taxonomyTerm2) {
 		// TODO: implement more efficiently!
 		Set<String> intersection = new HashSet<String>();
-		intersection
-				.addAll(this.annotations.getOntology().getAncestors(hpoId1));
-		intersection.retainAll(this.annotations.getOntology().getAncestors(
-				hpoId2));
+		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
+				taxonomyTerm1));
+		intersection.retainAll(this.annotations.getTaxonomy().getAncestors(
+				taxonomyTerm2));
 		double max = -1;
-		String micaId = this.annotations.getOntology().getRootId();
+		String micaId = this.annotations.getTaxonomy().getRootId();
 		for (String a : intersection) {
 			double ic = this.getIC(a);
 			if (ic >= max) {
@@ -113,17 +111,18 @@ public class ICPredictor extends AbstractPredictor {
 		return micaId;
 	}
 
-	public List<AnnotationTerm> getMICAIds(String hpoId1, String hpoId2) {
+	public List<AnnotationTerm> getMICAIds(String taxonomyTerm1,
+			String taxonomyTerm2) {
 		// TODO: implement more efficiently!
 		List<AnnotationTerm> result = new ArrayList<AnnotationTerm>();
 
 		Set<String> intersection = new HashSet<String>();
-		intersection
-				.addAll(this.annotations.getOntology().getAncestors(hpoId1));
-		intersection.retainAll(this.annotations.getOntology().getAncestors(
-				hpoId2));
+		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
+				taxonomyTerm1));
+		intersection.retainAll(this.annotations.getTaxonomy().getAncestors(
+				taxonomyTerm2));
 		double max = -1;
-		String micaId = this.annotations.getOntology().getRootId();
+		String micaId = this.annotations.getTaxonomy().getRootId();
 		while (intersection.size() > 0) {
 			for (String a : intersection) {
 				double ic = this.getIC(a);
@@ -132,8 +131,9 @@ public class ICPredictor extends AbstractPredictor {
 					micaId = a;
 				}
 			}
-			result.add(this.annotations.getHPONode(micaId));
-			intersection.removeAll(HPO.getInstance().getAncestors(micaId));
+			result.add(this.annotations.getTaxonomyNode(micaId));
+			intersection.removeAll(this.annotations.getTaxonomy().getAncestors(
+					micaId));
 		}
 		return result;
 	}
@@ -167,13 +167,13 @@ public class ICPredictor extends AbstractPredictor {
 	}
 
 	@Override
-	public List<SearchResult> getMatches(Collection<String> phenotypes) {
+	public List<SearchResult> getMatches(Collection<String> taxonomyTermIDs) {
 		List<SearchResult> result = new LinkedList<SearchResult>();
 		for (AnnotationTerm o : this.annotations.getAnnotations()) {
-			Set<String> annPhenotypes = this.annotations
-					.getPhenotypesWithAnnotation(o.getId()).keySet();
-			double matchScore = this.asymmetricPhenotypeSimilarity(phenotypes,
-					annPhenotypes);
+			Set<String> annTaxonomyTerms = this.annotations
+					.getTaxonomyTermsWithAnnotation(o.getId()).keySet();
+			double matchScore = this.asymmetricPhenotypeSimilarity(
+					taxonomyTermIDs, annTaxonomyTerms);
 			if (matchScore > 0) {
 				result
 						.add(new SearchResult(o.getId(), o.getName(),
@@ -184,16 +184,18 @@ public class ICPredictor extends AbstractPredictor {
 		return result;
 	}
 
-	public double getMatchScore(Collection<String> phenotypes, String resultID) {
-		List<String> annPhenotypes = this.annotations.getAnnotationNode(
-				resultID).getOriginalAnnotations();
-		return this.asymmetricPhenotypeSimilarity(phenotypes, annPhenotypes)
-				/ this.asymmetricPhenotypeSimilarity(annPhenotypes,
-						annPhenotypes);
+	public double getMatchScore(Collection<String> taxonomyTermIDs,
+			String annotationID) {
+		List<String> annTaxonomyTerms = this.annotations.getAnnotationNode(
+				annotationID).getOriginalAnnotations();
+		return this.asymmetricPhenotypeSimilarity(taxonomyTermIDs,
+				annTaxonomyTerms)
+				/ this.asymmetricPhenotypeSimilarity(annTaxonomyTerms,
+						annTaxonomyTerms);
 	}
 
 	@Override
-	public double getSpecificity(String item) {
-		return this.getIC(item);
+	public double getSpecificity(String taxonomyTermID) {
+		return this.getIC(taxonomyTermID);
 	}
 }

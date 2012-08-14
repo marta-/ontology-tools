@@ -22,8 +22,8 @@ package edu.toronto.cs.cidb.hpoa.prediction;
 import java.util.Collection;
 import java.util.List;
 
-import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
+import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
 
 public interface Predictor {
 	/**
@@ -48,22 +48,24 @@ public interface Predictor {
 	 * @return A list of {@link SearchResult}s which map HPO ids to fitness
 	 *         scores, ordered descending by score.
 	 */
-	public List<SearchResult> getDifferentialPhenotypes(
+	public List<SearchResult> getDifferentialTaxonomyTerms(
 			Collection<String> phenotypes);
 
 	public double getSimilarityScore(Collection<String> query,
 			Collection<String> reference);
 
-	public void setAnnotation(HPOAnnotation annotation);
+	public void setAnnotation(TaxonomyAnnotation annotation);
 
-	public int getMatchRank(Collection<String> phenotypes, String result);
+	public int getMatchRank(Collection<String> taxonomyTermIDs,
+			String annotationID);
 
-	public int getMatchRank(Collection<String> phenotypes, String result,
-			int LIMIT);
+	public int getMatchRank(Collection<String> taxonomyTermIDs,
+			String annotationID, int LIMIT);
 
-	public double getMatchScore(Collection<String> phenotypes, String result);
+	public double getMatchScore(Collection<String> taxonomyTermIDs,
+			String annotationID);
 
-	public double getSpecificity(String item);
+	public double getSpecificity(String taxonomyTermID);
 
-	public int getRankForOwnSymptoms(String resultID);
+	public int getRankForOwnTaxonomyTerms(String annotationID);
 }

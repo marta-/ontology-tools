@@ -26,19 +26,20 @@ import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 
 public class BNPredictor extends AbstractPredictor {
 	@Override
-	public List<SearchResult> getMatches(Collection<String> phenotypes) {
+	public List<SearchResult> getMatches(Collection<String> taxonomyTermIDs) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public double getMatchScore(Collection<String> phenotypes, String result) {
+	public double getMatchScore(Collection<String> taxonomyTermIDs,
+			String annotationID) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public double getSpecificity(String item) {
+	public double getSpecificity(String taxonomyTermID) {
 		// TODO Auto-generated method stub
 		return 0;
 	}

@@ -17,43 +17,25 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package edu.toronto.cs.cidb.hpoa.ontology;
-
-import java.io.File;
-import java.util.List;
-import java.util.Set;
+package edu.toronto.cs.cidb.hpoa.taxonomy;
 
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
-import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
-import edu.toronto.cs.cidb.solr.SolrScriptService;
 
-public interface Ontology {
-	public abstract int load(SolrScriptService source);
+public class TaxonomyTerm extends DAGNode {
 
-	public abstract int load(File source);
+	public TaxonomyTerm(String id) {
+		super(id);
+	}
 
-	public abstract String getRealId(String id);
+	public TaxonomyTerm(String id, String name) {
+		super(id, name);
+	}
 
-	public abstract OntologyTerm getTerm(String id);
-
-	public abstract String getName(String id);
-
-	public abstract String getRootId();
-
-	public abstract IDAGNode getRoot();
-
-	public abstract Set<String> getAncestors(String termId);
-
-	public abstract List<DAGNode> getLeaves();
-
-	public abstract boolean removeNode(String id);
-
-	public abstract boolean removeNode(OntologyTerm node);
-
-	public abstract int size();
-
-	public void display();
-
-	public void display(File out);
+	public TaxonomyTerm(TermData data) {
+		this(data.getId() + "", data.getName() + "");
+		for (String parentId : data.get(TermData.PARENT_FIELD_NAME)) {
+			this.addParent(parentId);
+		}
+	}
 
 }

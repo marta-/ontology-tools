@@ -26,75 +26,76 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
-public abstract class AbstractHPOAnnotation extends BGraph<AnnotationTerm>
-		implements HPOAnnotation {
-	public static final Side HPO = BGraph.Side.R;
+public abstract class AbstractTaxonomyAnnotation extends BGraph<AnnotationTerm>
+		implements TaxonomyAnnotation {
+	public static final Side TAXONOMY = BGraph.Side.R;
 	public static final Side ANNOTATION = BGraph.Side.L;
 
-	protected Ontology hpo;
+	protected Taxonomy taxonomy;
 
-	public Ontology getOntology() {
-		return this.hpo;
+	public Taxonomy getTaxonomy() {
+		return this.taxonomy;
 	}
 
-	public AbstractHPOAnnotation(Ontology hpo) {
-		this.hpo = hpo;
+	public AbstractTaxonomyAnnotation(Taxonomy taxonomy) {
+		this.taxonomy = taxonomy;
 	}
 
 	public abstract int load(File source);
 
-	public void propagateHPOAnnotations() {
+	public void propagateTaxonomyAnnotations() {
 		for (AnnotationTerm t : this.getAnnotations()) {
-			propagateHPOAnnotations(t);
+			propagateTaxonomyAnnotations(t);
 		}
 	}
 
-	public void propagateHPOAnnotations(AnnotationTerm annTerm) {
-		annTerm.propagateAnnotations(this);
+	public void propagateTaxonomyAnnotations(AnnotationTerm annTerm) {
+		annTerm.propagateAnnotations(this, this.taxonomy);
 	}
 
 	public Set<String> getAnnotationIds() {
 		return this.getNodesIds(ANNOTATION);
 	}
 
-	public Set<String> getHPONodesIds() {
-		return this.getNodesIds(HPO);
+	public Set<String> getTaxonomyNodesIds() {
+		return this.getNodesIds(TAXONOMY);
 	}
 
 	public Collection<AnnotationTerm> getAnnotations() {
 		return this.getNodes(ANNOTATION);
 	}
 
-	public Collection<AnnotationTerm> getHPONodes() {
-		return this.getNodes(HPO);
+	public Collection<AnnotationTerm> getTaxonomyNodes() {
+		return this.getNodes(TAXONOMY);
 	}
 
 	public AnnotationTerm getAnnotationNode(String annId) {
 		return this.getNode(annId, ANNOTATION);
 	}
 
-	public AnnotationTerm getHPONode(String id) {
-		return this.getNode(id, HPO);
+	public AnnotationTerm getTaxonomyNode(String id) {
+		return this.getNode(id, TAXONOMY);
 	}
 
-	public Map<String, String> getPhenotypesWithAnnotation(String annId) {
+	public Map<String, String> getTaxonomyTermsWithAnnotation(String annId) {
 		Map<String, String> results = new TreeMap<String, String>();
-		AnnotationTerm omimNode = this.getAnnotationNode(annId);
-		for (String hpId : omimNode.getNeighbors()) {
-			String hpName = this.hpo != null ? this.hpo.getName(hpId) : hpId;
-			results.put(hpId, hpName);
+		AnnotationTerm annNode = this.getAnnotationNode(annId);
+		for (String tId : annNode.getNeighbors()) {
+			String tName = this.taxonomy != null ? this.taxonomy.getName(tId)
+					: tId;
+			results.put(tId, tName);
 		}
 		return results;
 	}
 
-	public Collection<AnnotationTerm> getAnnotations(String hpoId) {
+	public Collection<AnnotationTerm> getAnnotations(String taconomyTermID) {
 		Collection<AnnotationTerm> result = new LinkedList<AnnotationTerm>();
-		if (this.getHPONode(hpoId) != null
-				&& this.getHPONode(hpoId).getNeighbors() != null) {
-			for (String a : this.getHPONode(hpoId).getNeighbors()) {
+		if (this.getTaxonomyNode(taconomyTermID) != null
+				&& this.getTaxonomyNode(taconomyTermID).getNeighbors() != null) {
+			for (String a : this.getTaxonomyNode(taconomyTermID).getNeighbors()) {
 				result.add(this.getAnnotationNode(a));
 			}
 		}

@@ -17,23 +17,19 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package edu.toronto.cs.cidb.hpoa.ontology;
+package edu.toronto.cs.cidb.hpoa.taxonomy;
 
-public class HPO extends AbstractOntology {
+public class GO extends AbstractTaxonomy {
 
-	private static HPO instance;
+	private static GO instance;
 
 	static {
-		new HPO();
+		new GO();
 	}
 
-	private HPO() {
+	private GO() {
 		initialize();
 	}
-
-	// @Inject
-	// @Named("solr")
-	// private ScriptService service;
 
 	public void initialize() {
 		// if (this.service != null) {
@@ -41,13 +37,13 @@ public class HPO extends AbstractOntology {
 		// } else {
 		this
 				.load(getInputFileHandler(
-						"http://compbio.charite.de/svn/hpo/trunk/src/ontology/human-phenotype-ontology.obo",
+						"http://www.geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo",
 						false));
 		// }
 		instance = this;
 	}
 
-	public static HPO getInstance() {
+	public static GO getInstance() {
 		return instance;
 	}
 }

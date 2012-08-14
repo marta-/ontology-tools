@@ -26,83 +26,82 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
+import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
 import edu.toronto.cs.cidb.hpoa.utils.maps.CounterMap;
 import edu.toronto.cs.cidb.hpoa.utils.maps.SumMap;
 
 public abstract class AbstractPredictor implements Predictor {
-	protected HPOAnnotation annotations;
+	protected TaxonomyAnnotation annotations;
 
 	@Override
-	public void setAnnotation(HPOAnnotation annotations) {
+	public void setAnnotation(TaxonomyAnnotation annotations) {
 		this.annotations = annotations;
 	}
 
 	@Override
-	public List<SearchResult> getDifferentialPhenotypes(
-			Collection<String> phenotypes) {
+	public List<SearchResult> getDifferentialTaxonomyTerms(
+			Collection<String> taxonomyTermIDs) {
 		List<SearchResult> result = new LinkedList<SearchResult>();
 		SumMap<String> cummulativeScore = new SumMap<String>();
 		CounterMap<String> matchCounter = new CounterMap<String>();
-		List<SearchResult> matches = getMatches(phenotypes);
+		List<SearchResult> matches = getMatches(taxonomyTermIDs);
 		for (SearchResult r : matches) {
 			String omimId = r.getId();
-			for (String hpoId : this.annotations.getPhenotypesWithAnnotation(
+			for (String tID : this.annotations.getTaxonomyTermsWithAnnotation(
 					omimId).keySet()) {
-				if (phenotypes.contains(hpoId)) {
+				if (taxonomyTermIDs.contains(tID)) {
 					continue;
 				}
-				cummulativeScore.addTo(hpoId, r.getScore());
-				matchCounter.addTo(hpoId);
+				cummulativeScore.addTo(tID, r.getScore());
+				matchCounter.addTo(tID);
 			}
 		}
 		if (matchCounter.getMinValue() <= matches.size() / 2) {
-			for (String hpoId : cummulativeScore.keySet()) {
-				result.add(new SearchResult(hpoId, this.annotations
-						.getOntology().getTerm(hpoId).getName(),
-						cummulativeScore.get(hpoId)
-								/ (matchCounter.get(hpoId) * matchCounter
-										.get(hpoId))));
+			for (String tID : cummulativeScore.keySet()) {
+				result.add(new SearchResult(tID, this.annotations.getTaxonomy()
+						.getTerm(tID).getName(), cummulativeScore.get(tID)
+						/ (matchCounter.get(tID) * matchCounter.get(tID))));
 			}
 			Collections.sort(result);
 		}
 		return result;
 	}
 
-	public int getMatchRank(Collection<String> phenotypes, String resultID) {
+	public int getMatchRank(Collection<String> taxonomyTermIDs,
+			String annotationID) {
 		int rank = 0;
-		for (SearchResult r : this.getMatches(phenotypes)) {
+		for (SearchResult r : this.getMatches(taxonomyTermIDs)) {
 			++rank;
-			if (r.getId().equals(resultID)) {
+			if (r.getId().equals(annotationID)) {
 				return rank;
 			}
 		}
 		return -1;
 	}
 
-	public int getMatchRank(Collection<String> phenotypes, String resultID,
-			int LIMIT) {
+	public int getMatchRank(Collection<String> taxonomyTermIDs,
+			String annotationID, int LIMIT) {
 		int rank = 0;
-		for (SearchResult r : this.getMatches(phenotypes)) {
+		for (SearchResult r : this.getMatches(taxonomyTermIDs)) {
 			if (++rank >= LIMIT) {
 				break;
 			}
-			if (r.getId().equals(resultID)) {
+			if (r.getId().equals(annotationID)) {
 				return rank;
 			}
 		}
 		return -1;
 	}
 
-	public int getRankForOwnSymptoms(String resultID) {
+	public int getRankForOwnTaxonomyTerms(String annotationID) {
 		int rank = 1;
 		List<String> annPhenotypes = this.annotations.getAnnotationNode(
-				resultID).getOriginalAnnotations();
-		double ownScore = getMatchScore(annPhenotypes, resultID);
+				annotationID).getOriginalAnnotations();
+		double ownScore = getMatchScore(annPhenotypes, annotationID);
 		Set<String> pool = new HashSet<String>();
 		for (String p : annPhenotypes) {
-			pool.addAll(this.annotations.getHPONode(p).getNeighbors());
+			pool.addAll(this.annotations.getTaxonomyNode(p).getNeighbors());
 		}
 		// System.out.print(resultID + "\trank out of " + pool.size() + "/"
 		// + this.annotations.getAnnotationIds().size() + ":\t");

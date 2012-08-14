@@ -37,20 +37,20 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 
-import edu.toronto.cs.cidb.hpoa.annotation.HPOAnnotation;
+import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
 import edu.toronto.cs.cidb.hpoa.annotation.OmimHPOAnnotations;
-import edu.toronto.cs.cidb.hpoa.ontology.HPO;
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
-import edu.toronto.cs.cidb.hpoa.ontology.OntologyTerm;
-import edu.toronto.cs.cidb.hpoa.ontology.clustering.BottomUpAnnClustering;
 import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
 import edu.toronto.cs.cidb.hpoa.prediction.Predictor;
+import edu.toronto.cs.cidb.hpoa.taxonomy.HPO;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
+import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
+import edu.toronto.cs.cidb.hpoa.taxonomy.clustering.BottomUpAnnClustering;
 import edu.toronto.cs.cidb.hpoa.utils.maps.SetMap;
 
 public class Main {
 
 	public static void main(String[] args) {
-		Ontology hpo = HPO.getInstance();
+		Taxonomy hpo = HPO.getInstance();
 		OmimHPOAnnotations ann = new OmimHPOAnnotations(hpo);
 		ann
 				.load(getInputFileHandler(
@@ -62,7 +62,7 @@ public class Main {
 
 	}
 
-	protected static void generateSimilarityScores(HPOAnnotation ann,
+	protected static void generateSimilarityScores(TaxonomyAnnotation ann,
 			String[] args) {
 		Predictor p = new ICPredictor();
 		p.setAnnotation(ann);
@@ -119,7 +119,7 @@ public class Main {
 
 	}
 
-	protected static void clusterOntology(Ontology hpo, HPOAnnotation ann) {
+	protected static void clusterOntology(Taxonomy hpo, TaxonomyAnnotation ann) {
 		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann,
 				getTemporaryFile("omim_symptoms_rank_data"),
 				getTemporaryFile("log_"
@@ -130,7 +130,7 @@ public class Main {
 		// generateMapping(hpo, "out_2012-07-17", "decipher_hpo_subset");
 	}
 
-	protected static void generateMapping(Ontology hpo, String coreFileName,
+	protected static void generateMapping(Taxonomy hpo, String coreFileName,
 			String inputFileName) {
 		PrintStream out;
 		try {
@@ -179,7 +179,7 @@ public class Main {
 				}
 				while (!front.isEmpty()) {
 					for (String tId : front) {
-						OntologyTerm t = hpo.getTerm(tId);
+						TaxonomyTerm t = hpo.getTerm(tId);
 						if (t != null) {
 							if (core.contains(t.getId())) {
 								replacements.add(t.getId());

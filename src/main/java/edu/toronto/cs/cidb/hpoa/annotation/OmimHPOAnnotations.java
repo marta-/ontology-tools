@@ -29,11 +29,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import edu.toronto.cs.cidb.hpoa.ontology.Ontology;
+import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
-public class OmimHPOAnnotations extends AbstractHPOAnnotation {
+public class OmimHPOAnnotations extends AbstractTaxonomyAnnotation {
 	public static final Side OMIM = BGraph.Side.L;
+	public static final Side HPO = BGraph.Side.R;
 
 	private static final String OMIM_ANNOTATION_MARKER = "OMIM";
 
@@ -41,7 +42,7 @@ public class OmimHPOAnnotations extends AbstractHPOAnnotation {
 
 	private static final int MIN_EXPECTED_FIELDS = 8;
 
-	public OmimHPOAnnotations(Ontology hpo) {
+	public OmimHPOAnnotations(Taxonomy hpo) {
 		super(hpo);
 	}
 
@@ -65,7 +66,7 @@ public class OmimHPOAnnotations extends AbstractHPOAnnotation {
 				if (pieces.length != MIN_EXPECTED_FIELDS) {
 					continue;
 				}
-				final String omimId = OMIM_ANNOTATION_MARKER + ":" + pieces[1], omimName = pieces[2], hpoId = this.hpo
+				final String omimId = OMIM_ANNOTATION_MARKER + ":" + pieces[1], omimName = pieces[2], hpoId = this.taxonomy
 						.getRealId(pieces[4]), rel = pieces[3];
 				if (!"NOT".equals(rel)) {
 					connection.clear();
@@ -75,7 +76,7 @@ public class OmimHPOAnnotations extends AbstractHPOAnnotation {
 				}
 			}
 			in.close();
-			propagateHPOAnnotations();
+			propagateTaxonomyAnnotations();
 		} catch (NullPointerException ex) {
 			ex.printStackTrace();
 			System.err.println("File does not exist");
@@ -100,5 +101,17 @@ public class OmimHPOAnnotations extends AbstractHPOAnnotation {
 
 	public AnnotationTerm getOMIMNode(String omimId) {
 		return this.getNode(omimId, OMIM);
+	}
+
+	public Set<String> getHPONodesIds() {
+		return this.getNodesIds(HPO);
+	}
+
+	public Collection<AnnotationTerm> getHPONodes() {
+		return this.getNodes(HPO);
+	}
+
+	public AnnotationTerm getHPONode(String omimId) {
+		return this.getNode(omimId, HPO);
 	}
 }

@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package edu.toronto.cs.cidb.hpoa.ontology;
+package edu.toronto.cs.cidb.hpoa.taxonomy;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -46,8 +46,8 @@ import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.maps.CounterMap;
 import edu.toronto.cs.cidb.solr.SolrScriptService;
 
-public abstract class AbstractOntology extends DAG<OntologyTerm> implements
-		Ontology {
+public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
+		Taxonomy {
 	public final static String PARENT_ID_REGEX = "^([A-Z]{2}\\:[0-9]{7})\\s*!\\s*.*";
 
 	private final static String TERM_MARKER = "[Term]";
@@ -64,7 +64,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * edu.toronto.cs.cidb.hpoa.ontology.Ontology#load(edu.toronto.cs.cidb.solr
+	 * edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#load(edu.toronto.cs.cidb.solr
 	 * .SolrScriptService)
 	 */
 	@SuppressWarnings("unchecked")
@@ -87,7 +87,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 				}
 			}
 			if (data.isValid()) {
-				this.createOntologyTerm(data);
+				this.createTaxonomyTerm(data);
 			}
 		}
 		cleanArcs();
@@ -98,7 +98,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.toronto.cs.cidb.hpoa.ontology.Ontology#load(java.io.File)
+	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomyy#load(java.io.File)
 	 */
 	public int load(File source) {
 		// Make sure we can read the data
@@ -114,7 +114,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 			while ((line = in.readLine()) != null) {
 				if (line.trim().equalsIgnoreCase(TERM_MARKER)) {
 					if (data.isValid()) {
-						this.createOntologyTerm(data);
+						this.createTaxonomyTerm(data);
 					}
 					data.clear();
 					continue;
@@ -127,7 +127,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 				data.addTo(name, value);
 			}
 			if (data.isValid()) {
-				this.createOntologyTerm(data);
+				this.createTaxonomyTerm(data);
 			}
 			in.close();
 		} catch (NullPointerException ex) {
@@ -173,7 +173,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 				this.root = n;
 			}
 		} else {
-			this.root = new OntologyTerm("", "FAKE ROOT");
+			this.root = new TaxonomyTerm("", "FAKE ROOT");
 			for (IDAGNode n : roots) {
 				this.root.addChild(n);
 				n.addParent(this.root);
@@ -181,8 +181,8 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 		}
 	}
 
-	protected void createOntologyTerm(TermData data) {
-		OntologyTerm term = new OntologyTerm(data);
+	protected void createTaxonomyTerm(TermData data) {
+		TaxonomyTerm term = new TaxonomyTerm(data);
 		this.addNode(term);
 		this.alternateIdMapping.put(term.getId(), term.getId());
 		for (String altId : data.safeGet(TermData.ALT_ID_FIELD_NAME)) {
@@ -194,7 +194,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * edu.toronto.cs.cidb.hpoa.ontology.Ontology#getRealId(java.lang.String)
+	 * edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getRealId(java.lang.String)
 	 */
 	public String getRealId(String id) {
 		return this.alternateIdMapping.get(id);
@@ -203,12 +203,12 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.toronto.cs.cidb.hpoa.ontology.Ontology#getTerm(java.lang.String)
+	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getTerm(java.lang.String)
 	 */
-	public OntologyTerm getTerm(String id) {
+	public TaxonomyTerm getTerm(String id) {
 		String realId = this.getRealId(id);
 		if (realId != null) {
-			return (OntologyTerm) this.getNode(realId);
+			return (TaxonomyTerm) this.getNode(realId);
 		}
 		return null;
 	}
@@ -216,7 +216,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.toronto.cs.cidb.hpoa.ontology.Ontology#getName(java.lang.String)
+	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getName(java.lang.String)
 	 */
 	public String getName(String id) {
 		DAGNode node = this.getTerm(id);
@@ -242,7 +242,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.toronto.cs.cidb.hpoa.ontology.Ontology#getRootId()
+	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getRootId()
 	 */
 	public String getRootId() {
 		return this.root.getId();
@@ -251,7 +251,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.toronto.cs.cidb.hpoa.ontology.Ontology#getRoot()
+	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getRoot()
 	 */
 	public IDAGNode getRoot() {
 		return this.root;
@@ -263,7 +263,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	}
 
 	@Override
-	public boolean removeNode(OntologyTerm node) {
+	public boolean removeNode(TaxonomyTerm node) {
 		return super.removeNode(node);
 	}
 
@@ -298,7 +298,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * edu.toronto.cs.cidb.hpoa.ontology.Ontology#getAncestors(java.lang.String)
+	 * edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getAncestors(java.lang.String)
 	 */
 	public Set<String> getAncestors(String termId) {
 		if (this.ancestorCache.get(termId) == null) {
@@ -375,7 +375,7 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 				if (Boolean.TRUE.equals(visited.get(id))) {
 					continue;
 				}
-				OntologyTerm term = this.getTerm(id);
+				TaxonomyTerm term = this.getTerm(id);
 				int p = term.getParents().size();
 				h.addTo(p);
 				if (min > p) {
@@ -401,13 +401,4 @@ public abstract class AbstractOntology extends DAG<OntologyTerm> implements
 		out.println("MAX: " + max);
 		out.println("AVG: " + avg);
 	}
-	// @Override
-	// public AbstractOntology clone() {
-	// AbstractOntology clone;
-	// clone = super.clone();
-	// for (Entry<String, String> entry : this.alternateIdMapping.entrySet()) {
-	// clone.alternateIdMapping.put(entry.getKey(), entry.getValue());
-	// }
-	// return clone;
-	// }
 }
