@@ -19,12 +19,16 @@
  */
 package edu.toronto.cs.cidb.hpoa.taxonomy.clustering;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
 
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
@@ -42,6 +48,7 @@ import edu.toronto.cs.cidb.hpoa.taxonomy.HPO;
 import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
+import edu.toronto.cs.cidb.hpoa.utils.maps.SetMap;
 
 public class BottomUpAnnClustering {
 	final Taxonomy taxonomy;
@@ -286,5 +293,132 @@ public class BottomUpAnnClustering {
 
 		progress(">>> REMOVED", 1, 1);
 		return true;
+	}
+
+	protected static void generateMapping(Taxonomy hpo, String coreFileName,
+			String inputFileName, String outputFileName) {
+		PrintStream out;
+		try {
+			out = new PrintStream(getTemporaryFile(inputFileName
+					+ "_hpo-core-mapping"));
+		} catch (FileNotFoundException e1) {
+			out = System.out;
+			e1.printStackTrace();
+		}
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(
+					getTemporaryFile(coreFileName)));
+			String line;
+			Set<String> core = new HashSet<String>();
+			while ((line = in.readLine()) != null) {
+				if (!line.startsWith("HP:")) {
+					continue;
+				}
+				String id = line.substring(0, 10);
+				core.add(id);
+			}
+			in.close();
+
+			SetMap<String, String> obsoleteTermMapping = new SetMap<String, String>();
+			obsoleteTermMapping.addTo("HP:0000489", "HP:0100886");
+			obsoleteTermMapping.addTo("HP:0000489", "HP:0100887");
+			obsoleteTermMapping.addTo("HP:0009885", "HP:0004322");
+
+			Set<String> newDHS = new HashSet<String>();
+
+			in = new BufferedReader(new FileReader(
+					getTemporaryFile(inputFileName)));
+
+			int count = 0;
+			while ((line = in.readLine()) != null) {
+				if (!line.startsWith("HP:")) {
+					continue;
+				}
+				++count;
+				Set<String> replacements = new HashSet<String>();
+				Set<String> front = new HashSet<String>();
+				Set<String> next = new HashSet<String>();
+				front.addAll(obsoleteTermMapping.safeGet(line.trim()));
+				if (front.isEmpty()) {
+					front.add(line.trim());
+				}
+				while (!front.isEmpty()) {
+					for (String tId : front) {
+						TaxonomyTerm t = hpo.getTerm(tId);
+						if (t != null) {
+							if (core.contains(t.getId())) {
+								replacements.add(t.getId());
+							} else {
+								for (String p : t.getParents()) {
+									next.add(p);
+								}
+							}
+						}
+					}
+					front.clear();
+					front.addAll(next);
+					next.clear();
+				}
+				if (!replacements.contains(line.trim())) {
+					out.println(line.trim() + "\t" + replacements);
+				}
+				newDHS.addAll(replacements);
+			}
+			in.close();
+
+			out.println();
+			// System.out.println("New # of leaves in ontology: " +
+			// leaves.size());
+			out.println("Initial DECIPHER phenotypes: " + count);
+			out.println("New DECIPHER phenotypes:     " + newDHS.size());
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if (out != System.out) {
+			out.close();
+		}
+	}
+
+	public static File getInputFileHandler(String inputLocation,
+			boolean forceUpdate) {
+		try {
+			File result = new File(inputLocation);
+			if (!result.exists()) {
+				String name = inputLocation.substring(inputLocation
+						.lastIndexOf('/') + 1);
+				result = getTemporaryFile(name);
+				if (!result.exists()) {
+					result.createNewFile();
+					BufferedInputStream in = new BufferedInputStream((new URL(
+							inputLocation)).openStream());
+					OutputStream out = new FileOutputStream(result);
+					IOUtils.copy(in, out);
+					out.flush();
+					out.close();
+				}
+			}
+			return result;
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
+	protected static File getTemporaryFile(String name) {
+		return getInternalFile(name, "tmp");
+	}
+
+	protected static File getInternalFile(String name, String dir) {
+		File parent = new File("", dir);
+		if (!parent.exists()) {
+			parent.mkdirs();
+		}
+		return new File(parent, name);
 	}
 }
