@@ -24,38 +24,63 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
-public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
+public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 	public static final Side GENE = BGraph.Side.L;
-	public static final Side HPO = BGraph.Side.R;
+	public static final Side GO = BGraph.Side.R;
 
-	private static final String COMMENT_MARKER = "#";
+	private static final String COMMENT_MARKER = "!";
 
-	private static final Pattern GENE_REG_EXP = Pattern
-			.compile("([A-Z0-9]+)\\(([0-9]+)\\)");
+	// (0, {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA",
+	// "ISM"}), --> more confident
+	// (1, {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA",
+	// "ISM", "IGC", "RCA"})]) --> less confident
+	private static final String[] VALID_EVIDENCE_SOURCES = { "EXP", "IDA",
+			"IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA", "ISM" };
+	private static final String[] VALID_RELS = { "" };
 
-	private static final Pattern ANNOTATION_REG_EXP = Pattern
-			.compile("^(.*)\\s\\((HP:[0-9]{7})\\)\t\\[("
-					+ GENE_REG_EXP.pattern() + "(,\\s" + GENE_REG_EXP.pattern()
-					+ ")*)\\]$");
+	private static final String SEPARATOR = "\t";
 
-	private static final int NAME_IDX = 1;
+	private static final int MIN_EXPECTED_PIECES = 6;
 
-	private static final int ID_IDX = 2;
+	private static final int GENE_IDX = 1;
 
-	private static final int LIST_IDX = 3;
+	private static final int REL_IDX = 3;
 
-	public GeneHPOAnnotations(Taxonomy hpo) {
-		super(hpo);
+	private static final int GO_IDX = 4;
+
+	private static final int EVIDENCE_IDX = 5;
+
+	List<String> validEvds = Arrays.asList(VALID_EVIDENCE_SOURCES);
+	List<String> validRels = Arrays.asList(VALID_RELS);
+
+	public GeneGOAnnotations(Taxonomy go) {
+		super(go);
+	}
+
+	public void setValidEvidenceSources(String input) {
+		this.setValidEvidenceSources(input.split("\\s*[, ]\\s*"));
+	}
+
+	public void setValidEvidenceSources(String[] input) {
+		this.validEvds = Arrays.asList(input);
+	}
+	
+	public void setValidRels(String input) {
+		this.setValidRels(input.split("\\s*[, ]\\s*"));
+	}
+
+	public void setValidRels(String[] input) {
+		this.validRels = Arrays.asList(input);
 	}
 
 	@Override
@@ -74,22 +99,18 @@ public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
 				if (line.startsWith(COMMENT_MARKER)) {
 					continue;
 				}
-				Matcher m = ANNOTATION_REG_EXP.matcher(line);
-				if (m.find()) {
-					// String hpoName = m.group(NAME_IDX);
-					final String hpoId = this.taxonomy.getRealId(m
-							.group(ID_IDX));
-					String geneList = m.group(LIST_IDX);
-					if (geneList != null) {
-						final Matcher mi = GENE_REG_EXP.matcher(geneList);
-						while (mi.find()) {
-							connection.clear();
-							connection.put(GENE, new AnnotationTerm(mi
-									.group(ID_IDX), mi.group(NAME_IDX)));
-							connection.put(TAXONOMY, new AnnotationTerm(hpoId));
-							this.addConnection(connection);
-						}
-					}
+				String pieces[] = line.split(SEPARATOR);
+				if (pieces.length < MIN_EXPECTED_PIECES) {
+					System.err.println("Unexpected line format: " + line);
+					continue;
+				}
+				if (this.validEvds.contains(pieces[EVIDENCE_IDX])
+						&& this.validRels.contains(pieces[REL_IDX])) {
+					connection.clear();
+					connection.put(GENE, new AnnotationTerm(pieces[GENE_IDX],
+							pieces[GENE_IDX]));
+					connection.put(GO, new AnnotationTerm(pieces[GO_IDX]));
+					this.addConnection(connection);
 				}
 			}
 			in.close();
@@ -120,15 +141,15 @@ public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
 		return this.getNode(geneId, GENE);
 	}
 
-	public Set<String> getHPONodesIds() {
-		return this.getNodesIds(HPO);
+	public Set<String> getGONodesIds() {
+		return this.getNodesIds(GO);
 	}
 
-	public Collection<AnnotationTerm> getHPONodes() {
-		return this.getNodes(HPO);
+	public Collection<AnnotationTerm> getGONodes() {
+		return this.getNodes(GO);
 	}
 
-	public AnnotationTerm getHPONode(String omimId) {
-		return this.getNode(omimId, HPO);
+	public AnnotationTerm getGONode(String omimId) {
+		return this.getNode(omimId, GO);
 	}
 }
