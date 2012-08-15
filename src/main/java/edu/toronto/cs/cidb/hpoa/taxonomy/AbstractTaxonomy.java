@@ -52,6 +52,8 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 
 	private final static String TERM_MARKER = "[Term]";
 
+	private final static String END_OF_TERM_LIST_MARKER = "[Typedef]";
+
 	private final static String FIELD_NAME_VALUE_SEPARATOR = "\\s*:\\s+";
 
 	private final Map<String, String> alternateIdMapping = new HashMap<String, String>();
@@ -112,6 +114,9 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 			BufferedReader in = new BufferedReader(new FileReader(source));
 			String line;
 			while ((line = in.readLine()) != null) {
+				if (line.trim().equalsIgnoreCase(END_OF_TERM_LIST_MARKER)) {
+					break;
+				}
 				if (line.trim().equalsIgnoreCase(TERM_MARKER)) {
 					if (data.isValid()) {
 						this.createTaxonomyTerm(data);
@@ -174,6 +179,8 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 			}
 		} else {
 			this.root = new TaxonomyTerm("", "FAKE ROOT");
+			this.addNode((TaxonomyTerm) this.root);
+			this.alternateIdMapping.put(this.root.getId(), this.root.getId());
 			for (IDAGNode n : roots) {
 				this.root.addChild(n);
 				n.addParent(this.root);
