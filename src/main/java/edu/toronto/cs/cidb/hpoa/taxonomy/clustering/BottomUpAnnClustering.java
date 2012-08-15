@@ -45,7 +45,6 @@ import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.maps.SetMap;
 
 public class BottomUpAnnClustering {
-	final Taxonomy taxonomy;
 	final TaxonomyAnnotation annotation;;
 	final Predictor predictor = new ICPredictor();
 
@@ -55,14 +54,12 @@ public class BottomUpAnnClustering {
 
 	// private rankData = new
 
-	public BottomUpAnnClustering(Taxonomy taxonomy,
-			TaxonomyAnnotation annotation) {
-		this(taxonomy, annotation, null, null);
+	public BottomUpAnnClustering(TaxonomyAnnotation annotation) {
+		this(annotation, null, null);
 	}
 
-	public BottomUpAnnClustering(Taxonomy taxonomy,
-			TaxonomyAnnotation annotation, File rankDataSource, File log) {
-		this.taxonomy = taxonomy;
+	public BottomUpAnnClustering(TaxonomyAnnotation annotation,
+			File rankDataSource, File log) {
 		this.annotation = annotation;
 		this.predictor.setAnnotation(this.annotation);
 		this.rankDataSource = rankDataSource;
@@ -157,12 +154,12 @@ public class BottomUpAnnClustering {
 		int removedNodes = 0;
 		int removedArcs = 0;
 
-		Taxonomy taxonomy = this.taxonomy;// .clone()
+		Taxonomy taxonomy = this.annotation.getTaxonomy();// .clone()
 		this.predictor.setAnnotation(this.annotation);
 
 		Set<String> crtLevel = new HashSet<String>();
 		Set<String> nextLevel = new HashSet<String>();
-		for (DAGNode t : this.taxonomy.getLeaves()) {
+		for (DAGNode t : taxonomy.getLeaves()) {
 			// System.out.println("L0 " + t.getId() + " " + t.getName());
 			crtLevel.add(t.getId());
 		}
@@ -178,7 +175,7 @@ public class BottomUpAnnClustering {
 			// Collections.reverse(sortedResults);
 			int lCount = 0;
 			for (SearchResult r : sortedResults) {
-				TaxonomyTerm term = this.taxonomy.getTerm(r.getId());
+				TaxonomyTerm term = taxonomy.getTerm(r.getId());
 				if (term == null) {
 					continue;
 				}
@@ -215,7 +212,7 @@ public class BottomUpAnnClustering {
 		if (aP == null) {
 			return true;
 		}
-		TaxonomyTerm oP = this.taxonomy.getTerm(taxonomyTermID);
+		TaxonomyTerm oP = this.annotation.getTaxonomy().getTerm(taxonomyTermID);
 
 		// Annotations for this taxonomy term
 		Set<String> relatedAnnotations = new HashSet<String>();
@@ -303,11 +300,11 @@ public class BottomUpAnnClustering {
 		}
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(
-					getTemporaryFile(coreFileName)));
+					LocalFileUtils.getTemporaryFile(coreFileName)));
 			String line;
 			Set<String> core = new HashSet<String>();
 			while ((line = in.readLine()) != null) {
-				if (!line.startsWith(this.taxonomy.getIDPrefix())) {
+				if (!line.startsWith(taxonomy.getIDPrefix())) {
 					continue;
 				}
 				String id = line.substring(0, 10);
@@ -327,7 +324,7 @@ public class BottomUpAnnClustering {
 
 			int count = 0;
 			while ((line = in.readLine()) != null) {
-				if (!line.startsWith(this.taxonomy.getIDPrefix())) {
+				if (!line.startsWith(taxonomy.getIDPrefix())) {
 					continue;
 				}
 				++count;

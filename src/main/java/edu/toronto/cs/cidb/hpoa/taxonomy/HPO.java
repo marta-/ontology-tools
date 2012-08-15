@@ -20,31 +20,12 @@
 package edu.toronto.cs.cidb.hpoa.taxonomy;
 
 public class HPO extends AbstractTaxonomy {
-
-	private static HPO instance;
-
-	static {
-		new HPO();
-	}
-
-	private HPO() {
-		initialize();
-	}
-
-	public void initialize() {
-		// if (this.service != null) {
-		// this.load((SolrScriptService) this.service);
-		// } else {
+	public HPO() {
+		super();
 		this
 				.load(getInputFileHandler(
 						"http://compbio.charite.de/svn/hpo/trunk/src/ontology/human-phenotype-ontology.obo",
 						false));
-		// }
-		instance = this;
-	}
-
-	public static HPO getInstance() {
-		return instance;
 	}
 
 	@Override

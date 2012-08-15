@@ -19,82 +19,11 @@
  */
 package edu.toronto.cs.cidb.hpoa.main;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URL;
-import java.util.Date;
-
-import org.apache.commons.io.IOUtils;
-
-import edu.toronto.cs.cidb.hpoa.annotation.OmimHPOAnnotations;
-import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
-import edu.toronto.cs.cidb.hpoa.similarity.SimilarityGenerator;
-import edu.toronto.cs.cidb.hpoa.taxonomy.HPO;
-import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
-import edu.toronto.cs.cidb.hpoa.taxonomy.clustering.BottomUpAnnClustering;
 
 public class Main {
 
 	public static void main(String[] args) {
-		Taxonomy hpo = HPO.getInstance();
-		OmimHPOAnnotations ann = new OmimHPOAnnotations(hpo);
-		ann
-				.load(getInputFileHandler(
-						"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_annotation.tab",
-						false));
-
-		// cluster(hpo, ann);
-		new SimilarityGenerator().generateSimilarityScores(ann, args);
+		new CommandDispatcher().process(args);
 	}
 
-	public void cluster(Taxonomy hpo, TaxonomyAnnotation ann) {
-		BottomUpAnnClustering mfp = new BottomUpAnnClustering(hpo, ann,
-				getTemporaryFile("omim_symptoms_rank_data"),
-				getTemporaryFile("log_"
-						+ new Date(System.currentTimeMillis()).toString()));
-		mfp.buttomUpCluster().display(
-				getTemporaryFile("out_"
-						+ new Date(System.currentTimeMillis()).toString()));
-		// generateMapping(hpo, "out_2012-07-17", "decipher_hpo_subset");
-	}
-
-	public static File getInputFileHandler(String inputLocation,
-			boolean forceUpdate) {
-		try {
-			File result = new File(inputLocation);
-			if (!result.exists()) {
-				String name = inputLocation.substring(inputLocation
-						.lastIndexOf('/') + 1);
-				result = getTemporaryFile(name);
-				if (!result.exists()) {
-					result.createNewFile();
-					BufferedInputStream in = new BufferedInputStream((new URL(
-							inputLocation)).openStream());
-					OutputStream out = new FileOutputStream(result);
-					IOUtils.copy(in, out);
-					out.flush();
-					out.close();
-				}
-			}
-			return result;
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			return null;
-		}
-	}
-
-	protected static File getTemporaryFile(String name) {
-		return getInternalFile(name, "tmp");
-	}
-
-	protected static File getInternalFile(String name, String dir) {
-		File parent = new File("", dir);
-		if (!parent.exists()) {
-			parent.mkdirs();
-		}
-		return new File(parent, name);
-	}
 }

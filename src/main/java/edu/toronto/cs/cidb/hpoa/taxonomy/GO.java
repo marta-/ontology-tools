@@ -20,31 +20,12 @@
 package edu.toronto.cs.cidb.hpoa.taxonomy;
 
 public class GO extends AbstractTaxonomy {
-
-	private static GO instance;
-
-	static {
-		new GO();
-	}
-
-	private GO() {
-		initialize();
-	}
-
-	public void initialize() {
-		// if (this.service != null) {
-		// this.load((SolrScriptService) this.service);
-		// } else {
+	public GO() {
+		super();
 		this
 				.load(getInputFileHandler(
 						"http://www.geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo",
 						false));
-		// }
-		instance = this;
-	}
-
-	public static GO getInstance() {
-		return instance;
 	}
 
 	@Override

@@ -13,18 +13,10 @@ import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
 import edu.toronto.cs.cidb.hpoa.prediction.Predictor;
 
 public class SimilarityGenerator {
-	public void generateSimilarityScores(TaxonomyAnnotation ann, String[] args) {
+	public void generateSimilarityScores(TaxonomyAnnotation ann,
+			String inputFileName, String outputFileName) {
 		Predictor p = new ICPredictor();
 		p.setAnnotation(ann);
-		if (args.length == 0) {
-			return;
-		}
-		String inputFileName = args[0], outputFileName = "";
-		if (args.length > 1) {
-			outputFileName = args[1];
-		} else {
-			outputFileName = inputFileName + ".out";
-		}
 
 		try {
 			BufferedReader in = new BufferedReader(

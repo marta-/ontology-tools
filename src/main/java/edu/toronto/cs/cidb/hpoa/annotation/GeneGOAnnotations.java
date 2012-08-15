@@ -42,12 +42,6 @@ public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 
 	private static final String COMMENT_MARKER = "!";
 
-	// (0, {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA",
-	// "ISM"}), --> more confident
-	// (1, {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA",
-	// "ISM", "IGC", "RCA"})]) --> less confident
-	private static final String[] VALID_EVIDENCE_SOURCES = { "EXP", "IDA",
-			"IPI", "IMP", "IGI", "IEP", "ISS", "ISO", "ISA", "ISM" };
 	private static final String[] VALID_RELS = { "" };
 
 	private static final String SEPARATOR = "\t";
@@ -62,10 +56,10 @@ public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 
 	private static final int EVIDENCE_IDX = 6;
 
-	List<String> validEvds = Arrays.asList(VALID_EVIDENCE_SOURCES);
-	List<String> validRels = Arrays.asList(VALID_RELS);
+	private List<String> validEvds = new LinkedList<String>();
+	private List<String> validRels = Arrays.asList(VALID_RELS);
 
-	public GeneGOAnnotations(Taxonomy go) {
+	public GeneGOAnnotations(Taxonomy go, List<String> evidenceSources) {
 		super(go);
 		if (evidenceSources != null) {
 			this.validEvds.addAll(evidenceSources);
