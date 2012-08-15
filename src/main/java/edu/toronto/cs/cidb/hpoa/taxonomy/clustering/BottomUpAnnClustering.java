@@ -19,16 +19,12 @@
  */
 package edu.toronto.cs.cidb.hpoa.taxonomy.clustering;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,14 +33,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
-
 import edu.toronto.cs.cidb.hpoa.annotation.AnnotationTerm;
 import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 import edu.toronto.cs.cidb.hpoa.annotation.TaxonomyAnnotation;
+import edu.toronto.cs.cidb.hpoa.main.LocalFileUtils;
 import edu.toronto.cs.cidb.hpoa.prediction.ICPredictor;
 import edu.toronto.cs.cidb.hpoa.prediction.Predictor;
-import edu.toronto.cs.cidb.hpoa.taxonomy.HPO;
 import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
@@ -301,7 +295,7 @@ public class BottomUpAnnClustering {
 			String coreFileName, String inputFileName, String outputFileName) {
 		PrintStream out;
 		try {
-			out = new PrintStream(getTemporaryFile(inputFileName
+			out = new PrintStream(LocalFileUtils.getTemporaryFile(inputFileName
 					+ "_hpo-core-mapping"));
 		} catch (FileNotFoundException e1) {
 			out = System.out;
@@ -328,8 +322,8 @@ public class BottomUpAnnClustering {
 
 			Set<String> newDHS = new HashSet<String>();
 
-			in = new BufferedReader(new FileReader(
-					getTemporaryFile(inputFileName)));
+			in = new BufferedReader(new FileReader(LocalFileUtils
+					.getTemporaryFile(inputFileName)));
 
 			int count = 0;
 			while ((line = in.readLine()) != null) {
@@ -385,42 +379,5 @@ public class BottomUpAnnClustering {
 		if (out != System.out) {
 			out.close();
 		}
-	}
-
-	public static File getInputFileHandler(String inputLocation,
-			boolean forceUpdate) {
-		try {
-			File result = new File(inputLocation);
-			if (!result.exists()) {
-				String name = inputLocation.substring(inputLocation
-						.lastIndexOf('/') + 1);
-				result = getTemporaryFile(name);
-				if (!result.exists()) {
-					result.createNewFile();
-					BufferedInputStream in = new BufferedInputStream((new URL(
-							inputLocation)).openStream());
-					OutputStream out = new FileOutputStream(result);
-					IOUtils.copy(in, out);
-					out.flush();
-					out.close();
-				}
-			}
-			return result;
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			return null;
-		}
-	}
-
-	protected static File getTemporaryFile(String name) {
-		return getInternalFile(name, "tmp");
-	}
-
-	protected static File getInternalFile(String name, String dir) {
-		File parent = new File("", dir);
-		if (!parent.exists()) {
-			parent.mkdirs();
-		}
-		return new File(parent, name);
 	}
 }

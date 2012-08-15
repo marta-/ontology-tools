@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -37,14 +36,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAG;
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.maps.CounterMap;
-import edu.toronto.cs.cidb.solr.SolrScriptService;
 
 public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 		Taxonomy {
@@ -61,41 +57,6 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 	private IDAGNode root;
 
 	private final Map<String, Set<String>> ancestorCache = new HashMap<String, Set<String>>();
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#load(edu.toronto.cs.cidb.solr
-	 * .SolrScriptService)
-	 */
-	@SuppressWarnings("unchecked")
-	public int load(SolrScriptService source) {
-		// Make sure we can read the data
-		if (source == null) {
-			return -1;
-		}
-		// Load data
-		clear();
-		TermData data = new TermData();
-		SolrDocumentList results = source.search("*:*");
-		for (SolrDocument result : results) {
-			for (String name : result.getFieldNames()) {
-				Object val = result.get(name);
-				if (val instanceof Collection<?>) {
-					data.put(name, (Collection) val);
-				} else {
-					data.addTo(name, (String) val);
-				}
-			}
-			if (data.isValid()) {
-				this.createTaxonomyTerm(data);
-			}
-		}
-		cleanArcs();
-		// How much did we load:
-		return size();
-	}
 
 	/*
 	 * (non-Javadoc)

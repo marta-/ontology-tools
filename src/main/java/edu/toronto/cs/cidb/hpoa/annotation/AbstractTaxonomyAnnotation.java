@@ -31,8 +31,8 @@ import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
 public abstract class AbstractTaxonomyAnnotation extends BGraph<AnnotationTerm>
 		implements TaxonomyAnnotation {
-	public static final Side TAXONOMY = BGraph.Side.R;
 	public static final Side ANNOTATION = BGraph.Side.L;
+	public static final Side TAXONOMY = BGraph.Side.R;
 
 	protected Taxonomy taxonomy;
 
