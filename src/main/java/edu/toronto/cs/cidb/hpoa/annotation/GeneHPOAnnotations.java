@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.toronto.cs.cidb.hpoa.main.LocalFileUtils;
 import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
@@ -56,6 +57,11 @@ public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
 
 	public GeneHPOAnnotations(Taxonomy hpo) {
 		super(hpo);
+		this
+				.load(LocalFileUtils
+						.getInputFileHandler(
+								"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_to_genes.txt",
+								false));
 	}
 
 	@Override

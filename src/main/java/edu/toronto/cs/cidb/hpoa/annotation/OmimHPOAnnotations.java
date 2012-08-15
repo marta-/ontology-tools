@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import edu.toronto.cs.cidb.hpoa.main.LocalFileUtils;
 import edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy;
 import edu.toronto.cs.cidb.hpoa.utils.graph.BGraph;
 
@@ -44,6 +45,11 @@ public class OmimHPOAnnotations extends AbstractTaxonomyAnnotation {
 
 	public OmimHPOAnnotations(Taxonomy hpo) {
 		super(hpo);
+		this
+				.load(LocalFileUtils
+						.getInputFileHandler(
+								"http://compbio.charite.de/svn/hpo/trunk/src/annotation/phenotype_annotation.tab",
+								false));
 	}
 
 	@Override
