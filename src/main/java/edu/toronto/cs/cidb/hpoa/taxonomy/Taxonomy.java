@@ -25,10 +25,10 @@ import java.util.Set;
 
 import edu.toronto.cs.cidb.hpoa.utils.graph.DAGNode;
 import edu.toronto.cs.cidb.hpoa.utils.graph.IDAGNode;
-import edu.toronto.cs.cidb.solr.SolrScriptService;
 
 public interface Taxonomy {
-	public abstract int load(SolrScriptService source);
+
+	public abstract String getIDPrefix();
 
 	public abstract int load(File source);
 

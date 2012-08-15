@@ -216,56 +216,58 @@ public class BottomUpAnnClustering {
 		return taxonomy;
 	}
 
-	protected boolean remove(String phenotype, Predictor predictor) {
-		AnnotationTerm aP = this.annotation.getTaxonomyNode(phenotype);
+	protected boolean remove(String taxonomyTermID, Predictor predictor) {
+		AnnotationTerm aP = this.annotation.getTaxonomyNode(taxonomyTermID);
 		if (aP == null) {
 			return true;
 		}
-		TaxonomyTerm oP = HPO.getInstance().getTerm(phenotype);
+		TaxonomyTerm oP = this.taxonomy.getTerm(taxonomyTermID);
 
-		// Diseases presenting this phenotype
-		Set<String> relatedDiseases = new HashSet<String>();
-		relatedDiseases.addAll(aP.getNeighbors());
-		// For all these diseases, replace the phenotype with its parents in the
+		// Annotations for this taxonomy term
+		Set<String> relatedAnnotations = new HashSet<String>();
+		relatedAnnotations.addAll(aP.getNeighbors());
+		// For all these annotations, replace the term with its parents in the
 		// annotation graph
-		for (String d : relatedDiseases) {
+		for (String d : relatedAnnotations) {
 			AnnotationTerm aD = this.annotation.getAnnotationNode(d);
-			aD.removeNeighbor(phenotype);
-			if (aD.getOriginalAnnotations().remove(phenotype)) {
+			aD.removeNeighbor(taxonomyTermID);
+			if (aD.getOriginalAnnotations().remove(taxonomyTermID)) {
 				aD.getOriginalAnnotations().addAll(oP.getParents());
 			}
 		}
 
-		// Diseases used as a subset against which the symptoms minus the
-		// phenotype will be searched for similarities
-		Set<String> comparisonDiseasePool = new HashSet<String>();
-		comparisonDiseasePool.addAll(relatedDiseases);
+		// Annotations used as a subset against which the terms minus the
+		// taxonomyTermID will be searched for similarities
+		Set<String> comparisonAnnotationPool = new HashSet<String>();
+		comparisonAnnotationPool.addAll(relatedAnnotations);
 
 		for (String p : oP.getParents()) {
-			comparisonDiseasePool.addAll(this.annotation.getTaxonomyNode(p)
+			comparisonAnnotationPool.addAll(this.annotation.getTaxonomyNode(p)
 					.getNeighbors());
 		}
-		progress(phenotype + ": Related diseases / Comparison pool",
-				relatedDiseases.size(), comparisonDiseasePool.size());
+		progress(taxonomyTermID + ": Related annotations / Comparison pool",
+				relatedAnnotations.size(), comparisonAnnotationPool.size());
 
-		// check where each disease ranks in the pool
+		// check where each annotation ranks in the pool
 		boolean canRemove = true;
-		for (String d : relatedDiseases) {
-			// acceptable rank for each disease when searching for its symptoms
+		for (String d : relatedAnnotations) {
+			// acceptable rank for each annotation when searching for its
+			// taxonomy terms
 			int RANK_LIMIT = this.ORIGINAL_RANKS.get(d) == null ? 1
 					: this.ORIGINAL_RANKS.get(d);
 			AnnotationTerm aD = this.annotation.getAnnotationNode(d);
-			// the phenotypes we're looking for
-			Set<String> annPhenotypes = new HashSet<String>();
-			annPhenotypes.addAll(aD.getOriginalAnnotations());
+			// the terms we're looking for
+			Set<String> annTaxonomyTerms = new HashSet<String>();
+			annTaxonomyTerms.addAll(aD.getOriginalAnnotations());
 
-			// their score for the taret disease
-			double targetDiseaseScore = predictor.getMatchScore(annPhenotypes,
-					d);
+			// their score for the target annotation
+			double targetAnnScore = predictor
+					.getMatchScore(annTaxonomyTerms, d);
 			int crtRank = 1;
-			for (String cD : comparisonDiseasePool) {
-				double matchScore = predictor.getMatchScore(annPhenotypes, cD);
-				if (matchScore > targetDiseaseScore) {
+			for (String cD : comparisonAnnotationPool) {
+				double matchScore = predictor.getMatchScore(annTaxonomyTerms,
+						cD);
+				if (matchScore > targetAnnScore) {
 					// increase rank every time we find a higher score in the
 					// comparison pool
 					// terminate if rank limit is reached
@@ -280,11 +282,11 @@ public class BottomUpAnnClustering {
 			}
 		}
 		if (!canRemove) {
-			// undo changes dome to the annotation grph
-			for (String d : relatedDiseases) {
+			// undo changes dome to the annotation graph
+			for (String d : relatedAnnotations) {
 				AnnotationTerm aD = this.annotation.getAnnotationNode(d);
 				aD.addNeighbor(aP);
-				if (aD.getOriginalAnnotations().add(phenotype)) {
+				if (aD.getOriginalAnnotations().add(taxonomyTermID)) {
 					aD.getOriginalAnnotations().removeAll(oP.getParents());
 				}
 			}
@@ -295,8 +297,8 @@ public class BottomUpAnnClustering {
 		return true;
 	}
 
-	protected static void generateMapping(Taxonomy hpo, String coreFileName,
-			String inputFileName, String outputFileName) {
+	protected static void generateMapping(Taxonomy taxonomy,
+			String coreFileName, String inputFileName, String outputFileName) {
 		PrintStream out;
 		try {
 			out = new PrintStream(getTemporaryFile(inputFileName
@@ -311,7 +313,7 @@ public class BottomUpAnnClustering {
 			String line;
 			Set<String> core = new HashSet<String>();
 			while ((line = in.readLine()) != null) {
-				if (!line.startsWith("HP:")) {
+				if (!line.startsWith(this.taxonomy.getIDPrefix())) {
 					continue;
 				}
 				String id = line.substring(0, 10);
@@ -331,7 +333,7 @@ public class BottomUpAnnClustering {
 
 			int count = 0;
 			while ((line = in.readLine()) != null) {
-				if (!line.startsWith("HP:")) {
+				if (!line.startsWith(this.taxonomy.getIDPrefix())) {
 					continue;
 				}
 				++count;
@@ -344,7 +346,7 @@ public class BottomUpAnnClustering {
 				}
 				while (!front.isEmpty()) {
 					for (String tId : front) {
-						TaxonomyTerm t = hpo.getTerm(tId);
+						TaxonomyTerm t = taxonomy.getTerm(tId);
 						if (t != null) {
 							if (core.contains(t.getId())) {
 								replacements.add(t.getId());
@@ -369,8 +371,8 @@ public class BottomUpAnnClustering {
 			out.println();
 			// System.out.println("New # of leaves in ontology: " +
 			// leaves.size());
-			out.println("Initial DECIPHER phenotypes: " + count);
-			out.println("New DECIPHER phenotypes:     " + newDHS.size());
+			out.println("Initial terms count: " + count);
+			out.println("New terms count:     " + newDHS.size());
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block

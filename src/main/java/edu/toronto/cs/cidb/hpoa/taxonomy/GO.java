@@ -46,4 +46,9 @@ public class GO extends AbstractTaxonomy {
 	public static GO getInstance() {
 		return instance;
 	}
+
+	@Override
+	public String getIDPrefix() {
+		return "GO:";
+	}
 }

@@ -46,4 +46,9 @@ public class HPO extends AbstractTaxonomy {
 	public static HPO getInstance() {
 		return instance;
 	}
+
+	@Override
+	public String getIDPrefix() {
+		return "HP:";
+	}
 }
