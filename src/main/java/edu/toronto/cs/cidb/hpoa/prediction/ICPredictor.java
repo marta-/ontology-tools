@@ -34,7 +34,7 @@ import edu.toronto.cs.cidb.hpoa.annotation.SearchResult;
 import edu.toronto.cs.cidb.hpoa.taxonomy.TaxonomyTerm;
 
 public class ICPredictor extends AbstractPredictor {
-	private static final boolean ENABLE_CUMMULATIVE_IC = true;
+	private static final boolean ENABLE_CUMMULATIVE_IC = false;
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 
 	public double getIC(String taxonomyTermID) {
@@ -53,16 +53,18 @@ public class ICPredictor extends AbstractPredictor {
 		if (first == null) {
 			return result;
 		}
-		for (String ann : first.getNeighbors()) {
-			double countMe = 1;
-			for (int i = firstIndex; i < taxonomyTerms.size(); ++i) {
-				if (taxonomyTerms.get(i) != null
-						&& !taxonomyTerms.get(i).hasNeighbor(ann)) {
-					countMe = 0;
+		Set<String> commonNeighbors = new HashSet<String>();
+		commonNeighbors.addAll(first.getNeighbors());
+		result = commonNeighbors.size();
+		for (int i = firstIndex; i < taxonomyTerms.size(); ++i) {
+			if (taxonomyTerms.get(i) != null) {
+				commonNeighbors.retainAll(taxonomyTerms.get(i).getNeighbors());
+				if (commonNeighbors.size() > 0) {
+					result = commonNeighbors.size();
+				} else {
 					break;
 				}
 			}
-			result += countMe;
 		}
 		return -Math.log(result / this.annotations.getAnnotations().size());
 	}
@@ -115,6 +117,7 @@ public class ICPredictor extends AbstractPredictor {
 			String taxonomyTerm2) {
 		// TODO: implement more efficiently!
 		List<AnnotationTerm> result = new ArrayList<AnnotationTerm>();
+		int maxResults = 4;
 
 		Set<String> intersection = new HashSet<String>();
 		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
@@ -123,7 +126,7 @@ public class ICPredictor extends AbstractPredictor {
 				taxonomyTerm2));
 		double max = -1;
 		String micaId = this.annotations.getTaxonomy().getRootId();
-		while (intersection.size() > 0) {
+		while (intersection.size() > 0 && result.size() < maxResults) {
 			for (String a : intersection) {
 				double ic = this.getIC(a);
 				if (ic >= max) {
