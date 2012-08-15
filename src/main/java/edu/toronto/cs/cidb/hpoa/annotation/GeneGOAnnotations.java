@@ -50,7 +50,7 @@ public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 
 	private static final String SEPARATOR = "\t";
 
-	private static final int MIN_EXPECTED_PIECES = 6;
+	private static final int MIN_EXPECTED_PIECES = 7;
 
 	private static final int GENE_IDX = 1;
 
@@ -58,13 +58,21 @@ public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 
 	private static final int GO_IDX = 4;
 
-	private static final int EVIDENCE_IDX = 5;
+	private static final int EVIDENCE_IDX = 6;
 
 	List<String> validEvds = Arrays.asList(VALID_EVIDENCE_SOURCES);
 	List<String> validRels = Arrays.asList(VALID_RELS);
 
 	public GeneGOAnnotations(Taxonomy go) {
 		super(go);
+		if (evidenceSources != null) {
+			this.validEvds.addAll(evidenceSources);
+		}
+		this
+				.load(LocalFileUtils
+						.getInputFileHandler(
+								"http://www.cs.toronto.edu/~marta/d/gene_association.goa_human",
+								false));
 	}
 
 	public void setValidEvidenceSources(String input) {
