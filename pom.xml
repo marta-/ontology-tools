@@ -54,7 +54,7 @@
          <configuration>
            <archive>
              <manifest>
-               <mainClass>edu.toronto.cs.cidb.hpoa.main.Main</mainClass>
+               <mainClass>edu.toronto.cs.ontools.main.Main</mainClass>
              </manifest>
            </archive>
          </configuration>
