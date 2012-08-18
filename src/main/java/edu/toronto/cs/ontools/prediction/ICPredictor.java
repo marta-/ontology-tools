@@ -117,7 +117,7 @@ public class ICPredictor extends AbstractPredictor {
 			String taxonomyTerm2) {
 		// TODO: implement more efficiently!
 		List<AnnotationTerm> result = new ArrayList<AnnotationTerm>();
-		int maxResults = 4;
+		int maxResults = 8;
 
 		Set<String> intersection = new HashSet<String>();
 		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
@@ -135,6 +135,7 @@ public class ICPredictor extends AbstractPredictor {
 				}
 			}
 			result.add(this.annotations.getTaxonomyNode(micaId));
+			intersection.remove(micaId);
 			intersection.removeAll(this.annotations.getTaxonomy().getAncestors(
 					micaId));
 		}
