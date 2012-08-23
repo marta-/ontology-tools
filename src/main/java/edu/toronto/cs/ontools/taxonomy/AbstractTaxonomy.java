@@ -81,6 +81,9 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 				if (line.trim().equalsIgnoreCase(TERM_MARKER)) {
 					if (data.isValid()) {
 						this.createTaxonomyTerm(data);
+					} else if (data.getReplacement() != null) {
+						this.alternateIdMapping.put(data.getId(), data
+								.getReplacement());
 					}
 					data.clear();
 					continue;
@@ -94,6 +97,9 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 			}
 			if (data.isValid()) {
 				this.createTaxonomyTerm(data);
+			} else if (data.getReplacement() != null) {
+				this.alternateIdMapping
+						.put(data.getId(), data.getReplacement());
 			}
 			in.close();
 		} catch (NullPointerException ex) {

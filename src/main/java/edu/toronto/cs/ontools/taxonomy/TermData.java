@@ -35,6 +35,8 @@ public class TermData extends SetMap<String, String> {
 
 	public final static String OBSOLETE_FIELD_NAME = "is_obsolete";
 
+	public final static String REPLACEMENT_FIELD_NAME = "replaced_by";
+
 	public final static String ALT_ID_FIELD_NAME = "alt_id";
 
 	public final static String PARENT_ID_REGEX = "^([A-Z]+\\:[0-9]{7})\\s*!\\s*.*";
@@ -44,6 +46,8 @@ public class TermData extends SetMap<String, String> {
 	private String name;
 
 	private boolean obsolete = false;
+
+	private String replacement = null;
 
 	@Override
 	public void clear() {
@@ -61,12 +65,20 @@ public class TermData extends SetMap<String, String> {
 		return (this.name == null) ? "" : this.name;
 	}
 
-	public void setObsolete(boolean obsolete) {
+	private void setObsolete(boolean obsolete) {
 		this.obsolete = obsolete;
 	}
 
 	public boolean isObsolete() {
 		return this.obsolete;
+	}
+
+	private void setReplacement(String value) {
+		this.replacement = value;
+	}
+
+	public String getReplacement() {
+		return this.isObsolete() ? this.replacement : null;
 	}
 
 	public boolean isValid() {
@@ -81,6 +93,8 @@ public class TermData extends SetMap<String, String> {
 			this.name = value;
 		} else if (OBSOLETE_FIELD_NAME.equals(key) && "true".equals(value)) {
 			this.setObsolete(true);
+		} else if (REPLACEMENT_FIELD_NAME.equals(key)) {
+			this.setReplacement(value);
 		} else if (PARENT_FIELD_NAME.equals(key)) {
 			return super.addTo(PARENT_FIELD_NAME, value.replaceAll(
 					PARENT_ID_REGEX, "$1"));
