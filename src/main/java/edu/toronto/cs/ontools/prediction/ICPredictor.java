@@ -34,7 +34,7 @@ import edu.toronto.cs.ontools.annotation.SearchResult;
 import edu.toronto.cs.ontools.taxonomy.TaxonomyTerm;
 
 public class ICPredictor extends AbstractPredictor {
-	private static final boolean ENABLE_CUMMULATIVE_IC = false;
+	private static final boolean ENABLE_CUMMULATIVE_IC = true;
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 
 	public double getIC(String taxonomyTermID) {
@@ -115,18 +115,20 @@ public class ICPredictor extends AbstractPredictor {
 
 	public List<AnnotationTerm> getMICAIds(String taxonomyTerm1,
 			String taxonomyTerm2) {
-		// TODO: implement more efficiently!
 		List<AnnotationTerm> result = new ArrayList<AnnotationTerm>();
-		int maxResults = 8;
 
 		Set<String> intersection = new HashSet<String>();
 		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
 				taxonomyTerm1));
 		intersection.retainAll(this.annotations.getTaxonomy().getAncestors(
 				taxonomyTerm2));
+		// System.out.print("I\t" + intersection.size());
+
+		Set<String> commonAnnotations = new HashSet<String>();
+
 		double max = -1;
 		String micaId = this.annotations.getTaxonomy().getRootId();
-		while (intersection.size() > 0 && result.size() < maxResults) {
+		while (intersection.size() > 0) {
 			for (String a : intersection) {
 				double ic = this.getIC(a);
 				if (ic >= max) {
@@ -134,11 +136,27 @@ public class ICPredictor extends AbstractPredictor {
 					micaId = a;
 				}
 			}
-			result.add(this.annotations.getTaxonomyNode(micaId));
+			AnnotationTerm tNode = this.annotations.getTaxonomyNode(micaId);
+			if (commonAnnotations.isEmpty()) {
+				// This is the first ancestor
+				commonAnnotations.addAll(tNode.getNeighbors());
+			} else {
+				// This NOT is the first ancestor
+				commonAnnotations.retainAll(tNode.getNeighbors());
+				// Ignore this ancestor and all that follow it if it has nothing
+				// in common with the previously saved ones
+				if (commonAnnotations.isEmpty()) {
+					break;
+				}
+			}
+			result.add(tNode);
 			intersection.remove(micaId);
 			intersection.removeAll(this.annotations.getTaxonomy().getAncestors(
 					micaId));
 		}
+		// System.out.println("\t" + result.size() + "\t" +
+		// intersection.size());
+
 		return result;
 	}
 
