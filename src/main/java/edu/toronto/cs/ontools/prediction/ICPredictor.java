@@ -127,8 +127,9 @@ public class ICPredictor extends AbstractPredictor {
 		Set<String> commonAnnotations = new HashSet<String>();
 
 		double max = -1;
+		int maxCategories = 10;
 		String micaId = this.annotations.getTaxonomy().getRootId();
-		while (intersection.size() > 0) {
+		while (intersection.size() > 0 && result.size() < maxCategories) {
 			for (String a : intersection) {
 				double ic = this.getIC(a);
 				if (ic >= max) {
