@@ -186,8 +186,9 @@ public class ICPredictor extends AbstractPredictor {
 	}
 
 	public double getSimilarityScore(Collection<String> query,
-			Collection<String> reference) {
-		return this.asymmetricTermSimilarity(query, reference);
+			Collection<String> reference, boolean symmetric) {
+		return symmetric ? this.symmetricTermSimilarity(query, reference)
+				: this.asymmetricTermSimilarity(query, reference);
 	}
 
 	@Override

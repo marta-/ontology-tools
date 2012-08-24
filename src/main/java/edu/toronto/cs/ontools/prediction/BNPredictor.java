@@ -46,7 +46,7 @@ public class BNPredictor extends AbstractPredictor {
 
 	@Override
 	public double getSimilarityScore(Collection<String> query,
-			Collection<String> reference) {
+			Collection<String> reference, boolean symmetric) {
 		// TODO Auto-generated method stub
 		return 0;
 	}

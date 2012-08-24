@@ -114,4 +114,9 @@ public abstract class AbstractPredictor implements Predictor {
 		// System.out.println(rank);
 		return rank;
 	}
+
+	public double getSimilarityScore(Collection<String> query,
+			Collection<String> reference) {
+		return getSimilarityScore(query, reference, false);
+	}
 }

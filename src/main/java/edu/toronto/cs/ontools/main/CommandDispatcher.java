@@ -75,8 +75,10 @@ public class CommandDispatcher {
 		SIMILARITY(
 				"s",
 				"similarity",
-				false,
-				"Compute similarity scores for sets of terms fiven in an input file.\n\nIt is MANDATORY that one and only one of -r and -s be present.\n"),
+				true,
+				"Compute similarity scores for sets of terms given in an input file. "
+						+ "Uses asymmetrical similarities by default, unless the value of this argument is a prefix of \"symmetric\"."
+						+ "\n\nIt is MANDATORY that one and only one of -r and -s be present.\n"),
 
 		@SuppressWarnings("unchecked")
 		TAXONOMY("t", "taxonomy", true, "MANDATORY. Which taxonomy to use?",
@@ -336,8 +338,10 @@ public class CommandDispatcher {
 						.getOptionValue(CmdLineOptions.OUTPUT)
 						: inputFileName + ".out";
 				// Run the score computation
+				boolean symmetric = "symmetric".startsWith(this.getOptionValue(
+						CmdLineOptions.SIMILARITY).toLowerCase());
 				new SimilarityGenerator().generateSimilarityScores(ann,
-						inputFileName, outputFileName);
+						inputFileName, outputFileName, symmetric);
 			}
 
 		} catch (Exception ex) {

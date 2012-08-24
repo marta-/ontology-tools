@@ -14,7 +14,7 @@ import edu.toronto.cs.ontools.prediction.Predictor;
 
 public class SimilarityGenerator {
 	public void generateSimilarityScores(TaxonomyAnnotation ann,
-			String inputFileName, String outputFileName) {
+			String inputFileName, String outputFileName, boolean symmetric) {
 		Predictor p = new ICPredictor();
 		p.setAnnotation(ann);
 
@@ -46,7 +46,8 @@ public class SimilarityGenerator {
 								.split(ITEM_SEPARATOR));
 				// System.err.println(query);
 				// System.err.println(ref);
-				out.println(line + "\t" + p.getSimilarityScore(query, ref));
+				out.println(line + "\t"
+						+ p.getSimilarityScore(query, ref, symmetric));
 			}
 			out.flush();
 			out.close();

@@ -54,6 +54,9 @@ public interface Predictor {
 	public double getSimilarityScore(Collection<String> query,
 			Collection<String> reference);
 
+	public double getSimilarityScore(Collection<String> query,
+			Collection<String> reference, boolean symmetric);
+
 	public void setAnnotation(TaxonomyAnnotation annotation);
 
 	public int getMatchRank(Collection<String> taxonomyTermIDs,
