@@ -37,6 +37,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 
+import edu.toronto.cs.ontools.main.LocalFileUtils;
 import edu.toronto.cs.ontools.utils.graph.DAG;
 import edu.toronto.cs.ontools.utils.graph.DAGNode;
 import edu.toronto.cs.ontools.utils.graph.IDAGNode;
@@ -287,7 +288,7 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 			if (!result.exists()) {
 				String name = inputLocation.substring(inputLocation
 						.lastIndexOf('/') + 1);
-				result = getTemporaryFile(name);
+				result = LocalFileUtils.getTemporaryFile(name);
 				if (!result.exists()) {
 					result.createNewFile();
 					BufferedInputStream in = new BufferedInputStream((new URL(
@@ -303,19 +304,6 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 			ex.printStackTrace();
 			return null;
 		}
-	}
-
-	protected File getTemporaryFile(String name) {
-		return getInternalFile(name, "tmp");
-	}
-
-	protected File getInternalFile(String name, String dir) {
-		File parent = new File("", dir);
-		if (!parent.exists()) {
-			parent.mkdirs();
-		}
-		System.out.println(parent.getAbsolutePath());
-		return new File(parent, name);
 	}
 
 	public void display() {
