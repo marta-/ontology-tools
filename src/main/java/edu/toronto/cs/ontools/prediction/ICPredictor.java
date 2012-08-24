@@ -35,6 +35,7 @@ import edu.toronto.cs.ontools.taxonomy.TaxonomyTerm;
 
 public class ICPredictor extends AbstractPredictor {
 	private static final boolean ENABLE_CUMMULATIVE_IC = true;
+
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
 
 	public double getIC(String taxonomyTermID) {

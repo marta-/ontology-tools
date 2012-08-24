@@ -56,6 +56,7 @@ public class CommandDispatcher {
 			addAll(Arrays.asList(values));
 		}
 	};
+
 	private static List<String> GO_EVIDENCE_SOURCES = new LinkedList<String>() {
 		private static final long serialVersionUID = 20120815122350L;
 		{
@@ -63,7 +64,7 @@ public class CommandDispatcher {
 			String[] otherValues = { "IGC", "RCA" };
 			addAll(Arrays.asList(otherValues));
 		}
-	};;
+	};
 
 	// private static final List<Object>
 
