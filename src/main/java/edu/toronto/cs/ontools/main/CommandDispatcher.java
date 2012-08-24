@@ -301,7 +301,7 @@ public class CommandDispatcher {
 						}
 					}
 				}
-				ann = annotationType.equals("OMIN") ? new OmimHPOAnnotations(
+				ann = annotationType.equals("OMIM") ? new OmimHPOAnnotations(
 						taxonomy)
 						: (taxonomyName.equals("HPO") ? new GeneHPOAnnotations(
 								taxonomy) : new GeneGOAnnotations(taxonomy, ev));
