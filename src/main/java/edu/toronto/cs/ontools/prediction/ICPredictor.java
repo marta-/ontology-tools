@@ -162,7 +162,7 @@ public class ICPredictor extends AbstractPredictor {
 		return result;
 	}
 
-	public double asymmetricPhenotypeSimilarity(Collection<String> query,
+	public double asymmetricTermSimilarity(Collection<String> query,
 			Collection<String> reference) {
 		double result = 0.0;
 		for (String q : query) {
@@ -179,15 +179,15 @@ public class ICPredictor extends AbstractPredictor {
 		return result / (query.size() > 0 ? query.size() : 1);
 	}
 
-	public double symmetricPhenotypeSimilarity(Collection<String> query,
+	public double symmetricTermSimilarity(Collection<String> query,
 			Collection<String> reference) {
-		return .5 * asymmetricPhenotypeSimilarity(query, reference) + .5
-				* asymmetricPhenotypeSimilarity(reference, query);
+		return .5 * asymmetricTermSimilarity(query, reference) + .5
+				* asymmetricTermSimilarity(reference, query);
 	}
 
 	public double getSimilarityScore(Collection<String> query,
 			Collection<String> reference) {
-		return this.asymmetricPhenotypeSimilarity(query, reference);
+		return this.asymmetricTermSimilarity(query, reference);
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class ICPredictor extends AbstractPredictor {
 		for (AnnotationTerm o : this.annotations.getAnnotations()) {
 			Set<String> annTaxonomyTerms = this.annotations
 					.getTaxonomyTermsWithAnnotation(o.getId()).keySet();
-			double matchScore = this.asymmetricPhenotypeSimilarity(
+			double matchScore = this.asymmetricTermSimilarity(
 					taxonomyTermIDs, annTaxonomyTerms);
 			if (matchScore > 0) {
 				result
@@ -212,9 +212,9 @@ public class ICPredictor extends AbstractPredictor {
 			String annotationID) {
 		List<String> annTaxonomyTerms = this.annotations.getAnnotationNode(
 				annotationID).getOriginalAnnotations();
-		return this.asymmetricPhenotypeSimilarity(taxonomyTermIDs,
+		return this.asymmetricTermSimilarity(taxonomyTermIDs,
 				annTaxonomyTerms)
-				/ this.asymmetricPhenotypeSimilarity(annTaxonomyTerms,
+				/ this.asymmetricTermSimilarity(annTaxonomyTerms,
 						annTaxonomyTerms);
 	}
 
