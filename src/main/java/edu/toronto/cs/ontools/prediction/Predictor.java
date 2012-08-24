@@ -38,18 +38,19 @@ public interface Predictor {
 	public List<SearchResult> getMatches(Collection<String> phenotypes);
 
 	/**
-	 * Obtains a list of phenotypes that are likely to be useful in a
-	 * differential diagnosis. These are basically phenotypes present only in
-	 * some of the diseases matching the input phenotypes. The score reflects
-	 * the reliability of the differentiation.
+	 * Obtains a list of taxonomy terms that are likely to be useful for
+	 * differentiating between annotations (e.g. phenotypes for differential
+	 * diagnosis). These are basically terms present only in some of the
+	 * diseases matching the input. The score reflects the reliability of the
+	 * differentiation.
 	 * 
-	 * @param phenotypes
-	 *            A set of HPO ids
-	 * @return A list of {@link SearchResult}s which map HPO ids to fitness
-	 *         scores, ordered descending by score.
+	 * @param taxonomyTerms
+	 *            A set of taxonomy term identifiers
+	 * @return A list of {@link SearchResult}s which map taxonomy term
+	 *         identifiers to fitness scores, ordered descending by score.
 	 */
 	public List<SearchResult> getDifferentialTaxonomyTerms(
-			Collection<String> phenotypes);
+			Collection<String> taxonomyTerms);
 
 	public double getSimilarityScore(Collection<String> query,
 			Collection<String> reference);
