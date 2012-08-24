@@ -70,7 +70,7 @@ public class CommandDispatcher {
 
 	private enum CmdLineOptions {
 		REDUCE("r", "taxonomy-reduction", false,
-				"Perform taxonomy reduction wrt the given annotations"),
+				"Perform taxonomy reduction wrt the given annotations."),
 
 		SIMILARITY(
 				"s",
@@ -86,7 +86,7 @@ public class CommandDispatcher {
 
 		@SuppressWarnings("unchecked")
 		ANNOTATION("a", "annotation", true,
-				"MANDATORY. Which annotatoion to use?", null,
+				"MANDATORY. Which annotation to use?", null,
 				new HashSet<String>() {
 					private static final long serialVersionUID = 20120815122350L;
 					{
@@ -100,12 +100,12 @@ public class CommandDispatcher {
 
 		INPUT(
 				"i",
-				"input file",
+				"input-file",
 				true,
-				"ONLY WITH \"-c simmilarity\", where it is MANDATORY. Ingnored otherwise. "
+				"ONLY WITH \"-c simmilarity\", where it is MANDATORY. Ignored otherwise. "
 						+ "The path to a tab-separated text file, where the first two columns are comma-separated "
 						+ "lists of terms from the taxonomy selected with the -t parameter. "
-						+ "All other columns and all lines starting with \"##\" are ignored"),
+						+ "All other columns and all lines starting with \"##\" are ignored."),
 
 		OUTPUT(
 				"o",
@@ -114,17 +114,17 @@ public class CommandDispatcher {
 				"ONLY WITH \"-c simmilarity\", ingnored otherwise."
 						+ "The path of the output file which will be a copy of the input file with "
 						+ "one extra column containing the similarity scores for the sets in the first two columns. "
-						+ "If this parameter is missing, <input file name>.out will be used instead. "),
+						+ "If this parameter is missing, <input file name>.out will be used instead."),
 
 		EVIDENCE(
 				"e",
 				"go-evidence-sources",
 				true,
-				"ONLY WITH \"-c simmilarity\", ingnored otherwise. A comma-separated list of \"trusted\" evidence "
+				"ONLY WITH \"-c simmilarity\", ignored otherwise. A comma-separated list of \"trusted\" evidence "
 						+ "sources for GO annotations. ",
 				DEFAULT_GO_EVIDENCE_SOURCES, GO_EVIDENCE_SOURCES, true),
 
-		HELP("h", "help", false, "Shows command line options and exist");
+		HELP("h", "help", false, "Shows command line options and exits.");
 
 		private final String shortOption;
 
