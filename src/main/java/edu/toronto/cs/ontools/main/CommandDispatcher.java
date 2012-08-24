@@ -277,7 +277,10 @@ public class CommandDispatcher {
 						+ ". please choose one of: "
 						+ CmdLineOptions.TAXONOMY.getValues());
 			} else {
+				System.out.print("Loading taxonomy (" + taxonomyName + ")... ");
+				System.out.flush();
 				taxonomy = taxonomyName.equals("HPO") ? new HPO() : new GO();
+				System.out.println("Done");
 			}
 
 			// Get the annotation
@@ -305,14 +308,20 @@ public class CommandDispatcher {
 						}
 					}
 				}
+				System.out.print("Loading annotations (" + annotationType
+						+ ")... ");
+				System.out.flush();
 				ann = annotationType.equals("OMIM") ? new OmimHPOAnnotations(
 						taxonomy)
 						: (taxonomyName.equals("HPO") ? new GeneHPOAnnotations(
 								taxonomy) : new GeneGOAnnotations(taxonomy, ev));
+				System.out.println("Done");
 			}
 
 			// What does the user want to do?
 			if (this.hasOption(CmdLineOptions.REDUCE)) {
+				System.out.print("Reducing ontology... ");
+				System.out.flush();
 				// cluster the taxonomy
 				BottomUpAnnClustering mfp = new BottomUpAnnClustering(ann,
 						LocalFileUtils
@@ -320,11 +329,16 @@ public class CommandDispatcher {
 						LocalFileUtils.getTemporaryFile("log_"
 								+ new Date(System.currentTimeMillis())
 										.toString()));
-				mfp.buttomUpCluster().display(
-						LocalFileUtils.getTemporaryFile("out_"
+				java.io.File outputFile = LocalFileUtils
+						.getTemporaryFile("out_"
 								+ new Date(System.currentTimeMillis())
-										.toString()));
+										.toString());
+				mfp.buttomUpCluster().display(outputFile);
+				System.out.println("Done\nRresults printed in "
+						+ outputFile.getName());
 			} else {
+				System.out.print("Computing similarities... ");
+				System.out.flush();
 				// compute similarities
 				// check for the input file
 				if (!this.hasOption(CmdLineOptions.INPUT)) {
@@ -342,6 +356,8 @@ public class CommandDispatcher {
 						CmdLineOptions.SIMILARITY).toLowerCase());
 				new SimilarityGenerator().generateSimilarityScores(ann,
 						inputFileName, outputFileName, symmetric);
+				System.out
+						.println("Done\nResults printed in " + outputFileName);
 			}
 
 		} catch (Exception ex) {
