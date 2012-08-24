@@ -262,9 +262,10 @@ public class CommandDispatcher {
 			}
 
 			// Get the Taxonomy
-			String taxonomyName = this.getOptionValue(CmdLineOptions.TAXONOMY);
-			String annotationType = this
-					.getOptionValue(CmdLineOptions.ANNOTATION);
+			String taxonomyName = this.getOptionValue(CmdLineOptions.TAXONOMY)
+					.toUpperCase();
+			String annotationType = this.getOptionValue(
+					CmdLineOptions.ANNOTATION).toUpperCase();
 			TreeMap<String, Boolean> supportedAnnotations = (TreeMap<String, Boolean>) SUPPORTED_TAXONOMY_ANNOTATIONS
 					.get(taxonomyName);
 			Taxonomy taxonomy = null;
