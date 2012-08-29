@@ -19,6 +19,7 @@ import edu.toronto.cs.ontools.annotation.GeneGOAnnotations;
 import edu.toronto.cs.ontools.annotation.GeneHPOAnnotations;
 import edu.toronto.cs.ontools.annotation.OmimHPOAnnotations;
 import edu.toronto.cs.ontools.annotation.TaxonomyAnnotation;
+import edu.toronto.cs.ontools.similarity.Lookup;
 import edu.toronto.cs.ontools.similarity.SimilarityGenerator;
 import edu.toronto.cs.ontools.taxonomy.GO;
 import edu.toronto.cs.ontools.taxonomy.HPO;
@@ -78,7 +79,28 @@ public class CommandDispatcher {
 				true,
 				"Compute similarity scores for sets of terms given in an input file. "
 						+ "Uses asymmetrical similarities by default, unless the value of this argument is a prefix of \"symmetric\"."
-						+ "\n\nIt is MANDATORY that one and only one of -r and -s be present.\n"),
+						+ "\n\nIt is MANDATORY that one and only one of -r, -l and -s be present.\n"),
+
+		LOOKUP("l", "lookup", false,
+				"Compute similarity scores for sets of terms given in an input file. "),
+
+		QUERY(
+				"Q",
+				"query",
+				true,
+				"ONLY WITH \"-l\", where it is MANDATORY. Ignored otherwise. "
+						+ "The path to a tab-separated text file, where the first two columns are comma-separated "
+						+ "lists of terms from GO and HPO respectively. Each line of this query file is compared against each line of the reference file (see -R). "
+						+ "All other columns and all lines starting with \"##\" are ignored."),
+
+		REFERENCE(
+				"R",
+				"reference",
+				true,
+				"ONLY WITH \"-l\", where it is MANDATORY. Ignored otherwise. "
+						+ "The path to a tab-separated text file, where the first two columns are comma-separated "
+						+ "lists of terms from GO and HPO respectively. Each line of the query file (see -Q) is compared against each line of this reference file. "
+						+ "All other columns and all lines starting with \"##\" are ignored."),
 
 		@SuppressWarnings("unchecked")
 		TAXONOMY("t", "taxonomy", true, "MANDATORY. Which taxonomy to use?",
@@ -102,7 +124,7 @@ public class CommandDispatcher {
 				"i",
 				"input-file",
 				true,
-				"ONLY WITH \"-c simmilarity\", where it is MANDATORY. Ignored otherwise. "
+				"ONLY WITH \"-s\", where it is MANDATORY. Ignored otherwise. "
 						+ "The path to a tab-separated text file, where the first two columns are comma-separated "
 						+ "lists of terms from the taxonomy selected with the -t parameter. "
 						+ "All other columns and all lines starting with \"##\" are ignored."),
@@ -111,7 +133,7 @@ public class CommandDispatcher {
 				"o",
 				"output-file",
 				true,
-				"ONLY WITH \"-c simmilarity\", ingnored otherwise."
+				"ONLY WITH \"-s\" OR  \"-l\", ingnored otherwise."
 						+ "The path of the output file which will be a copy of the input file with "
 						+ "one extra column containing the similarity scores for the sets in the first two columns. "
 						+ "If this parameter is missing, <input file name>.out will be used instead."),
@@ -120,7 +142,7 @@ public class CommandDispatcher {
 				"e",
 				"go-evidence-sources",
 				true,
-				"ONLY WITH \"-c simmilarity\", ignored otherwise. A comma-separated list of \"trusted\" evidence "
+				"ONLY WITH \"-s\" OR  \"-l\", ignored otherwise. A comma-separated list of \"trusted\" evidence "
 						+ "sources for GO annotations. ",
 				DEFAULT_GO_EVIDENCE_SOURCES, GO_EVIDENCE_SOURCES, true),
 
@@ -244,80 +266,85 @@ public class CommandDispatcher {
 				showUsage(options);
 				System.exit(0);
 			}
-			if ((!this.hasOption(CmdLineOptions.REDUCE) && !this
-					.hasOption(CmdLineOptions.SIMILARITY))
-					|| (this.hasOption(CmdLineOptions.REDUCE) && this
-							.hasOption(CmdLineOptions.SIMILARITY))) {
+			int mandatoryParameters = 0;
+			mandatoryParameters += this.hasOption(CmdLineOptions.REDUCE) ? 1
+					: 0;
+			mandatoryParameters += this.hasOption(CmdLineOptions.SIMILARITY) ? 1
+					: 0;
+			mandatoryParameters += this.hasOption(CmdLineOptions.LOOKUP) ? 1
+					: 0;
+			if (mandatoryParameters != 1) {
 				showUsage(options);
-				failWithMessage("It is MANDATORY that one and only one of -r and -s be present in the command line."
-						+ this.hasOption(CmdLineOptions.REDUCE)
-						+ this.hasOption(CmdLineOptions.SIMILARITY));
+				failWithMessage("It is MANDATORY that one and only one of -r, -l and -s be present in the command line.");
 			}
 
-			if (!this.hasOption(CmdLineOptions.TAXONOMY)) {
-				showUsage(options);
-				failWithMessage("The taxonomy name (-t) is a MANDATORY argument");
-			}
-
-			if (!this.hasOption(CmdLineOptions.ANNOTATION)) {
-				showUsage(options);
-				failWithMessage("The annotation type (-a) is a MANDATORY argument");
-			}
-
-			// Get the Taxonomy
-			String taxonomyName = this.getOptionValue(CmdLineOptions.TAXONOMY)
-					.toUpperCase();
-			String annotationType = this.getOptionValue(
-					CmdLineOptions.ANNOTATION).toUpperCase();
-			TreeMap<String, Boolean> supportedAnnotations = (TreeMap<String, Boolean>) SUPPORTED_TAXONOMY_ANNOTATIONS
-					.get(taxonomyName);
 			Taxonomy taxonomy = null;
-			if (supportedAnnotations == null) {
-				failWithMessage("Unsupported taxonomy: " + taxonomyName
-						+ ". please choose one of: "
-						+ CmdLineOptions.TAXONOMY.getValues());
-			} else {
-				System.out.print("Loading taxonomy (" + taxonomyName + ")... ");
-				System.out.flush();
-				taxonomy = taxonomyName.equals("HPO") ? new HPO() : new GO();
-				System.out.println("Done");
-			}
-
-			// Get the annotation
 			TaxonomyAnnotation ann = null;
-			if (supportedAnnotations.get(annotationType) == null) {
-				failWithMessage("Unsupported annotation type: "
-						+ annotationType + ". please choose one of: "
-						+ CmdLineOptions.ANNOTATION.getValues());
-			} else {
-				List<String> ev = DEFAULT_GO_EVIDENCE_SOURCES;
-				// Any custom evidence levels?
-				if (hasOption(CmdLineOptions.EVIDENCE)) {
-					if (annotationType.equals("GENE")
-							&& taxonomyName.equals("GO")) {
-						String evStr = getOptionValue(CmdLineOptions.EVIDENCE);
-						String pieces[] = evStr.split("\\s*,\\s*");
-						if (pieces.length > 0) {
-							List<String> tmpEv = Arrays.asList(pieces);
-							if (!CmdLineOptions.EVIDENCE.isValueValid(tmpEv)) {
-								System.err
-										.println("Found invalid values in the evidence list provided with -e. Ignoring list.");
-							} else {
-								ev = tmpEv;
-							}
-						}
+			List<String> evidenceSources = DEFAULT_GO_EVIDENCE_SOURCES;
+			// Any custom evidence levels?
+			if (hasOption(CmdLineOptions.EVIDENCE)) {
+				String evStr = getOptionValue(CmdLineOptions.EVIDENCE);
+				String pieces[] = evStr.split("\\s*,\\s*");
+				if (pieces.length > 0) {
+					List<String> tmpEv = Arrays.asList(pieces);
+					if (!CmdLineOptions.EVIDENCE.isValueValid(tmpEv)) {
+						System.err
+								.println("Found invalid values in the evidence list provided with -e. Ignoring list.");
+					} else {
+						evidenceSources = tmpEv;
 					}
 				}
-				System.out.print("Loading annotations (" + annotationType
-						+ ")... ");
-				System.out.flush();
-				ann = annotationType.equals("OMIM") ? new OmimHPOAnnotations(
-						taxonomy)
-						: (taxonomyName.equals("HPO") ? new GeneHPOAnnotations(
-								taxonomy) : new GeneGOAnnotations(taxonomy, ev));
-				System.out.println("Done");
 			}
+			if (!this.hasOption(CmdLineOptions.LOOKUP)) {
+				if (!this.hasOption(CmdLineOptions.TAXONOMY)) {
+					showUsage(options);
+					failWithMessage("The taxonomy name (-t) is a MANDATORY argument");
+				}
 
+				if (!this.hasOption(CmdLineOptions.ANNOTATION)) {
+					showUsage(options);
+					failWithMessage("The annotation type (-a) is a MANDATORY argument");
+				}
+
+				// Get the Taxonomy
+				String taxonomyName = this.getOptionValue(
+						CmdLineOptions.TAXONOMY).toUpperCase();
+				String annotationType = this.getOptionValue(
+						CmdLineOptions.ANNOTATION).toUpperCase();
+				TreeMap<String, Boolean> supportedAnnotations = (TreeMap<String, Boolean>) SUPPORTED_TAXONOMY_ANNOTATIONS
+						.get(taxonomyName);
+
+				if (supportedAnnotations == null) {
+					failWithMessage("Unsupported taxonomy: " + taxonomyName
+							+ ". please choose one of: "
+							+ CmdLineOptions.TAXONOMY.getValues());
+				} else {
+					System.out.print("Loading taxonomy (" + taxonomyName
+							+ ")... ");
+					System.out.flush();
+					taxonomy = taxonomyName.equals("HPO") ? new HPO()
+							: new GO();
+					System.out.println("Done");
+				}
+
+				// Get the annotation
+				if (supportedAnnotations.get(annotationType) == null) {
+					failWithMessage("Unsupported annotation type: "
+							+ annotationType + ". please choose one of: "
+							+ CmdLineOptions.ANNOTATION.getValues());
+				} else {
+					System.out.print("Loading annotations (" + annotationType
+							+ ")... ");
+					System.out.flush();
+					ann = annotationType.equals("OMIM") ? new OmimHPOAnnotations(
+							taxonomy)
+							: (taxonomyName.equals("HPO") ? new GeneHPOAnnotations(
+									taxonomy)
+									: new GeneGOAnnotations(taxonomy,
+											evidenceSources));
+					System.out.println("Done");
+				}
+			}
 			// What does the user want to do?
 			if (this.hasOption(CmdLineOptions.REDUCE)) {
 				System.out.print("Reducing ontology... ");
@@ -336,14 +363,14 @@ public class CommandDispatcher {
 				mfp.buttomUpCluster().display(outputFile);
 				System.out.println("Done\nRresults printed in "
 						+ outputFile.getName());
-			} else {
+			} else if (this.hasOption(CmdLineOptions.SIMILARITY)) {
 				System.out.print("Computing similarities... ");
 				System.out.flush();
 				// compute similarities
 				// check for the input file
 				if (!this.hasOption(CmdLineOptions.INPUT)) {
 					showUsage(options);
-					failWithMessage("The argument -i is mandatory with -c similarity");
+					failWithMessage("The argument -i is mandatory with -s");
 				}
 				// get i/o files
 				String inputFileName = this
@@ -358,6 +385,26 @@ public class CommandDispatcher {
 						inputFileName, outputFileName, symmetric);
 				System.out
 						.println("Done\nResults printed in " + outputFileName);
+			} else {
+				System.out.println("Performing gene lookup... ");
+				// check for the input files
+				if (!this.hasOption(CmdLineOptions.QUERY)) {
+					showUsage(options);
+					failWithMessage("The argument -Q is mandatory with -l");
+				}
+				if (!this.hasOption(CmdLineOptions.REFERENCE)) {
+					showUsage(options);
+					failWithMessage("The argument -R is mandatory with -l");
+				}
+				String queryFileName = this
+						.getOptionValue(CmdLineOptions.QUERY);
+				String refFileName = this
+						.getOptionValue(CmdLineOptions.REFERENCE);
+				String outputFileName = this.hasOption(CmdLineOptions.OUTPUT) ? this
+						.getOptionValue(CmdLineOptions.OUTPUT)
+						: queryFileName + "__" + refFileName + ".out";
+				new Lookup().run(queryFileName, refFileName, outputFileName,
+						evidenceSources);
 			}
 
 		} catch (Exception ex) {

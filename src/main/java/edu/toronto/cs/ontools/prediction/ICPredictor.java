@@ -37,6 +37,7 @@ public class ICPredictor extends AbstractPredictor {
 	private static final boolean ENABLE_CUMMULATIVE_IC = true;
 
 	private final Map<String, Double> icCache = new HashMap<String, Double>();
+	private final Map<String, Double> simCache = new HashMap<String, Double>();
 
 	public double getIC(String taxonomyTermID) {
 		return getIC(this.annotations.getTaxonomyNode(taxonomyTermID));
@@ -162,14 +163,24 @@ public class ICPredictor extends AbstractPredictor {
 		return result;
 	}
 
+	private double similarity(String q, String r) {
+		Double result = this.simCache.get(q + r);
+		if (result == null) {
+			result = ENABLE_CUMMULATIVE_IC ? this.getCummulativeIC(this
+					.getMICAIds(q, r)) : this.getIC(this.getMICAId(q, r));
+			this.simCache.put(q + r, result);
+			this.simCache.put(r + q, result);
+		}
+		return result;
+	}
+
 	public double asymmetricTermSimilarity(Collection<String> query,
 			Collection<String> reference) {
 		double result = 0.0;
 		for (String q : query) {
 			double bestMatchIC = 0;
 			for (String r : reference) {
-				double ic = ENABLE_CUMMULATIVE_IC ? this.getCummulativeIC(this
-						.getMICAIds(q, r)) : this.getIC(this.getMICAId(q, r));
+				double ic = similarity(q, r);
 				if (ic > bestMatchIC) {
 					bestMatchIC = ic;
 				}
@@ -197,8 +208,8 @@ public class ICPredictor extends AbstractPredictor {
 		for (AnnotationTerm o : this.annotations.getAnnotations()) {
 			Set<String> annTaxonomyTerms = this.annotations
 					.getTaxonomyTermsWithAnnotation(o.getId()).keySet();
-			double matchScore = this.asymmetricTermSimilarity(
-					taxonomyTermIDs, annTaxonomyTerms);
+			double matchScore = this.asymmetricTermSimilarity(taxonomyTermIDs,
+					annTaxonomyTerms);
 			if (matchScore > 0) {
 				result
 						.add(new SearchResult(o.getId(), o.getName(),
@@ -213,8 +224,7 @@ public class ICPredictor extends AbstractPredictor {
 			String annotationID) {
 		List<String> annTaxonomyTerms = this.annotations.getAnnotationNode(
 				annotationID).getOriginalAnnotations();
-		return this.asymmetricTermSimilarity(taxonomyTermIDs,
-				annTaxonomyTerms)
+		return this.asymmetricTermSimilarity(taxonomyTermIDs, annTaxonomyTerms)
 				/ this.asymmetricTermSimilarity(annTaxonomyTerms,
 						annTaxonomyTerms);
 	}
