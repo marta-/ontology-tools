@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import edu.toronto.cs.ontools.utils.graph.DAGNode;
-import edu.toronto.cs.ontools.utils.graph.IDAGNode;
 
 public interface Taxonomy {
 
@@ -40,7 +39,7 @@ public interface Taxonomy {
 
 	public abstract String getRootId();
 
-	public abstract IDAGNode getRoot();
+	public abstract TaxonomyTerm getRoot();
 
 	public abstract Set<String> getAncestors(String termId);
 

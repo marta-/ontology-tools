@@ -228,8 +228,8 @@ public abstract class AbstractTaxonomy extends DAG<TaxonomyTerm> implements
 	 * 
 	 * @see edu.toronto.cs.cidb.hpoa.taxonomy.Taxonomy#getRoot()
 	 */
-	public IDAGNode getRoot() {
-		return this.root;
+	public TaxonomyTerm getRoot() {
+		return (TaxonomyTerm) this.root;
 	}
 
 	@Override
