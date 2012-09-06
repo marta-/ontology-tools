@@ -51,7 +51,7 @@
   </dependencies>
 
   <properties>
-    <maven.build.timestamp.format>yyyy-MM-dd-HHmm</maven.build.timestamp.format>
+    <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
   </properties>
 
   <build>
