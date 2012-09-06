@@ -22,11 +22,9 @@ package edu.toronto.cs.ontools.prediction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.toronto.cs.ontools.annotation.AnnotationTerm;
@@ -36,8 +34,8 @@ import edu.toronto.cs.ontools.taxonomy.TaxonomyTerm;
 public class ICPredictor extends AbstractPredictor {
 	private static final boolean ENABLE_CUMMULATIVE_IC = true;
 
-	private final Map<String, Double> icCache = new HashMap<String, Double>();
-	private final Map<String, Double> simCache = new HashMap<String, Double>();
+	private final SimpleCache<String, Double> icCache = new SimpleCache<String, Double>();
+	private final SimpleCache<String, Double> simCache = new SimpleCache<String, Double>();
 
 	public double getIC(String taxonomyTermID) {
 		return getIC(this.annotations.getTaxonomyNode(taxonomyTermID));
@@ -166,10 +164,12 @@ public class ICPredictor extends AbstractPredictor {
 	private double similarity(String q, String r) {
 		Double result = this.simCache.get(q + r);
 		if (result == null) {
+			result = this.simCache.get(r + q);
+		}
+		if (result == null) {
 			result = ENABLE_CUMMULATIVE_IC ? this.getCummulativeIC(this
 					.getMICAIds(q, r)) : this.getIC(this.getMICAId(q, r));
 			this.simCache.put(q + r, result);
-			this.simCache.put(r + q, result);
 		}
 		return result;
 	}
