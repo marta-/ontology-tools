@@ -99,7 +99,7 @@ public class BottomUpAnnClustering {
 				try {
 					BufferedReader in = new BufferedReader(new FileReader(
 							this.rankDataSource));
-					log("Reading OMIM ranks from "
+					log("Reading ranks from "
 							+ this.rankDataSource.getAbsolutePath() + "...\n");
 					for (String d : this.annotation.getAnnotationIds()) {
 						this.ORIGINAL_RANKS.put(d, 1);
@@ -131,7 +131,7 @@ public class BottomUpAnnClustering {
 			} else {
 				try {
 					out = new PrintStream(this.rankDataSource);
-					log("Writing OMIM ranks to "
+					log("Writing ranks to "
 							+ this.rankDataSource.getAbsolutePath() + "...\n");
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();

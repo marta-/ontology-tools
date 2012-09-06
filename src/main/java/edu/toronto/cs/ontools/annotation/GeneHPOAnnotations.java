@@ -137,4 +137,9 @@ public class GeneHPOAnnotations extends AbstractTaxonomyAnnotation {
 	public AnnotationTerm getHPONode(String omimId) {
 		return this.getNode(omimId, HPO);
 	}
+
+	@Override
+	public String getAnnotationType() {
+		return "gene_hpo";
+	}
 }

@@ -29,6 +29,8 @@ import edu.toronto.cs.ontools.taxonomy.Taxonomy;
 public interface TaxonomyAnnotation {
 	public int load(File source);
 
+	public String getAnnotationType();
+
 	public Taxonomy getTaxonomy();
 
 	public Set<String> getAnnotationIds();

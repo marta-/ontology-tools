@@ -156,4 +156,9 @@ public class GeneGOAnnotations extends AbstractTaxonomyAnnotation {
 	public AnnotationTerm getGONode(String omimId) {
 		return this.getNode(omimId, GO);
 	}
+
+	@Override
+	public String getAnnotationType() {
+		return "gene_go";
+	}
 }

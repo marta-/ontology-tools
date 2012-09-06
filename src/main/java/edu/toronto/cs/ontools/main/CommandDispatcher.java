@@ -351,11 +351,11 @@ public class CommandDispatcher {
 				System.out.flush();
 				// cluster the taxonomy
 				BottomUpAnnClustering mfp = new BottomUpAnnClustering(ann,
-						LocalFileUtils
-								.getTemporaryFile("omim_symptoms_rank_data"),
-						LocalFileUtils.getTemporaryFile("log_"
-								+ new Date(System.currentTimeMillis())
-										.toString()));
+						LocalFileUtils.getTemporaryFile(ann.getAnnotationType()
+								+ "_rank_data"), LocalFileUtils
+								.getTemporaryFile("log_"
+										+ new Date(System.currentTimeMillis())
+												.toString()));
 				java.io.File outputFile = LocalFileUtils
 						.getTemporaryFile("out_"
 								+ new Date(System.currentTimeMillis())
