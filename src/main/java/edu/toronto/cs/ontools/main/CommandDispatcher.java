@@ -146,6 +146,8 @@ public class CommandDispatcher {
 						+ "sources for GO annotations. ",
 				DEFAULT_GO_EVIDENCE_SOURCES, GO_EVIDENCE_SOURCES, true),
 
+		DEBUG("d", "debug-mode", false, "Displays debug messages."),
+
 		HELP("h", "help", false, "Shows command line options and exits.");
 
 		private final String shortOption;
@@ -360,6 +362,7 @@ public class CommandDispatcher {
 						.getTemporaryFile("out_"
 								+ new Date(System.currentTimeMillis())
 										.toString());
+				mfp.setDebugMode(this.hasOption(CmdLineOptions.DEBUG));
 				mfp.buttomUpCluster().display(outputFile);
 				System.out.println("Done\nRresults printed in "
 						+ outputFile.getName());
@@ -403,7 +406,9 @@ public class CommandDispatcher {
 				String outputFileName = this.hasOption(CmdLineOptions.OUTPUT) ? this
 						.getOptionValue(CmdLineOptions.OUTPUT)
 						: queryFileName + "__" + refFileName + ".out";
-				new Lookup().run(queryFileName, refFileName, outputFileName,
+				Lookup l = new Lookup();
+				l.setDebugMode(this.hasOption(CmdLineOptions.DEBUG));
+				l.run(queryFileName, refFileName, outputFileName,
 						evidenceSources);
 			}
 

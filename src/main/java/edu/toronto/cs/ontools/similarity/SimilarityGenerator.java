@@ -9,10 +9,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.toronto.cs.ontools.annotation.TaxonomyAnnotation;
+import edu.toronto.cs.ontools.main.AbstractCommandAction;
 import edu.toronto.cs.ontools.prediction.ICPredictor;
 import edu.toronto.cs.ontools.prediction.Predictor;
 
-public class SimilarityGenerator {
+public class SimilarityGenerator extends AbstractCommandAction {
 	public void generateSimilarityScores(TaxonomyAnnotation ann,
 			String inputFileName, String outputFileName, boolean symmetric) {
 		Predictor p = new ICPredictor();

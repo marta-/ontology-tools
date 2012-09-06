@@ -11,12 +11,13 @@ import java.util.List;
 
 import edu.toronto.cs.ontools.annotation.GeneGOAnnotations;
 import edu.toronto.cs.ontools.annotation.OmimHPOAnnotations;
+import edu.toronto.cs.ontools.main.AbstractCommandAction;
 import edu.toronto.cs.ontools.prediction.ICPredictor;
 import edu.toronto.cs.ontools.prediction.Predictor;
 import edu.toronto.cs.ontools.taxonomy.GO;
 import edu.toronto.cs.ontools.taxonomy.HPO;
 
-public class Lookup {
+public class Lookup extends AbstractCommandAction {
 	private List<List<String>> referenceGO = new ArrayList<List<String>>();
 	private List<List<String>> referenceHPO = new ArrayList<List<String>>();
 
@@ -80,9 +81,12 @@ public class Lookup {
 				++counter;
 				System.out.print(".");
 				System.out.flush();
-				if (counter % 100 == 0) {
-					System.out.print(counter);
-					System.out.flush();
+				if (isDebugMode()) {
+					if (counter % 100 == 0) {
+						System.out.print(counter);
+						System.out.flush();
+						out.flush();
+					}
 				}
 				if (line.startsWith(COMMENT_MARKER)) {
 					continue;
@@ -101,15 +105,23 @@ public class Lookup {
 				double avgScore = 0;
 				double maxScore = 0;
 				for (int i = 0; i < refSize; ++i) {
-					// System.out.println(qHpo + " " +
-					// this.referenceHPO.get(i));
+					if (isDebugMode()) {
+						System.out.println("\n" + counter + " | " + i + "/"
+								+ refSize);
+						System.out.println(qHpo + " "
+								+ this.referenceHPO.get(i));
+					}
 					double scoreHpo = hP.getSimilarityScore(qHpo,
 							this.referenceHPO.get(i), false);
-					// System.out.println("-->>" + scoreHpo);
-					// System.out.println(qGo + " " + this.referenceGO.get(i));
-					double scoreGo = (scoreHpo > 0) ? gP.getSimilarityScore(
+					if (isDebugMode()) {
+						System.out.println("-->>" + scoreHpo);
+						System.out.println(qGo + " " + this.referenceGO.get(i));
+					}
+					double scoreGo = (scoreHpo > .5) ? gP.getSimilarityScore(
 							qGo, this.referenceGO.get(i), false) : 0;
-					// System.out.println("-->>" + scoreGo);
+					if (isDebugMode()) {
+						System.out.println("-->>" + scoreGo);
+					}
 					double score = scoreHpo * scoreGo;
 					avgScore += score;
 					maxScore = Math.max(score, maxScore);

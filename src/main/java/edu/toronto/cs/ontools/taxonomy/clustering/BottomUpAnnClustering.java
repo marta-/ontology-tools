@@ -36,6 +36,7 @@ import java.util.Set;
 import edu.toronto.cs.ontools.annotation.AnnotationTerm;
 import edu.toronto.cs.ontools.annotation.SearchResult;
 import edu.toronto.cs.ontools.annotation.TaxonomyAnnotation;
+import edu.toronto.cs.ontools.main.AbstractCommandAction;
 import edu.toronto.cs.ontools.main.LocalFileUtils;
 import edu.toronto.cs.ontools.prediction.ICPredictor;
 import edu.toronto.cs.ontools.prediction.Predictor;
@@ -44,7 +45,7 @@ import edu.toronto.cs.ontools.taxonomy.TaxonomyTerm;
 import edu.toronto.cs.ontools.utils.graph.DAGNode;
 import edu.toronto.cs.ontools.utils.maps.SetMap;
 
-public class BottomUpAnnClustering {
+public class BottomUpAnnClustering extends AbstractCommandAction {
 	final TaxonomyAnnotation annotation;;
 	final Predictor predictor = new ICPredictor();
 
@@ -144,6 +145,13 @@ public class BottomUpAnnClustering {
 			out.println((counter++) + "/" + total + "\t" + d + "\t" + rank);
 			this.ORIGINAL_RANKS.put(d, rank);
 			out.flush();
+			if (isDebugMode()) {
+				if (counter % 100 == 0) {
+					System.out.println("\b\b\b\b\b"
+							+ String.format("%5d", counter));
+					System.out.flush();
+				}
+			}
 		}
 		if (!out.equals(System.out)) {
 			out.close();
