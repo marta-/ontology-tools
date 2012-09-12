@@ -158,6 +158,10 @@ public class BottomUpAnnClustering extends AbstractCommandAction {
 		}
 	}
 
+	public void run() {
+		this.buttomUpCluster();
+	}
+
 	public Taxonomy buttomUpCluster() {
 		int removedNodes = 0;
 		int removedArcs = 0;
@@ -301,7 +305,8 @@ public class BottomUpAnnClustering extends AbstractCommandAction {
 		PrintStream out;
 		try {
 			out = new PrintStream(LocalFileUtils.getTemporaryFile(inputFileName
-					+ "_hpo-core-mapping"));
+					+ "_" + taxonomy.getClass().getName().toLowerCase()
+					+ "-core-mapping"));
 		} catch (FileNotFoundException e1) {
 			out = System.out;
 			e1.printStackTrace();

@@ -20,6 +20,7 @@ import edu.toronto.cs.ontools.taxonomy.HPO;
 public class Lookup extends AbstractCommandAction {
 	private List<List<String>> referenceGO = new ArrayList<List<String>>();
 	private List<List<String>> referenceHPO = new ArrayList<List<String>>();
+	private List<String> referenceGene = new ArrayList<String>();
 
 	public void run(String queryFileName, String refFileName,
 			String outputFileName, List<String> evidenceSources) {
@@ -39,9 +40,10 @@ public class Lookup extends AbstractCommandAction {
 			BufferedReader rIn = new BufferedReader(new FileReader(refFileName));
 
 			String line;
-			int EXPECTED_LINE_PIECES = 2;
+			int EXPECTED_LINE_PIECES = 3;
 			int GO_SET_POSITION = 0;
 			int HPO_SET_POSITION = 1;
+			int GENE_POSITION = 2;
 			String SET_SEPARATOR = "\t+", ITEM_SEPARATOR = "\\s*[, ]\\s*", COMMENT_MARKER = "##";
 			System.out.print("Loading reference file... ");
 			System.out.flush();
@@ -67,6 +69,7 @@ public class Lookup extends AbstractCommandAction {
 						.split(ITEM_SEPARATOR)));
 				this.referenceHPO.add(Arrays.asList(pieces[HPO_SET_POSITION]
 						.split(ITEM_SEPARATOR)));
+				this.referenceGene.add(pieces[GENE_POSITION]);
 			}
 			int refSize = this.referenceGO.size();
 			rIn.close();
@@ -85,7 +88,6 @@ public class Lookup extends AbstractCommandAction {
 					if (counter % 100 == 0) {
 						System.out.print(counter);
 						System.out.flush();
-						out.flush();
 					}
 				}
 				if (line.startsWith(COMMENT_MARKER)) {
@@ -104,6 +106,7 @@ public class Lookup extends AbstractCommandAction {
 						.split(ITEM_SEPARATOR));
 				double avgScore = 0;
 				double maxScore = 0;
+				int bestRefIdx = -1;
 				for (int i = 0; i < refSize; ++i) {
 					if (isDebugMode()) {
 						System.out.println("\n" + counter + " | " + i + "/"
@@ -124,10 +127,24 @@ public class Lookup extends AbstractCommandAction {
 					}
 					double score = scoreHpo * scoreGo;
 					avgScore += score;
-					maxScore = Math.max(score, maxScore);
+					if (score > maxScore) {
+						maxScore = score;
+						bestRefIdx = i;
+					}
 				}
 				avgScore /= refSize;
-				out.println(line + "\t" + maxScore + "\t" + avgScore);
+				out.println(line
+						+ "\t"
+						+ maxScore
+						+ "\t"
+						+ avgScore
+						+ (bestRefIdx >= 0 ? "\t"
+								+ this.referenceGO.get(bestRefIdx) + "\t"
+								+ this.referenceHPO.get(bestRefIdx) + "\t"
+								+ this.referenceGene.get(bestRefIdx) : ""));
+				// if (counter % 10 == 0) {
+				out.flush();
+				// }
 			}
 			System.out.println(" Done");
 			out.flush();
