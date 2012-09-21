@@ -5,45 +5,49 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class SimpleCache<K, V> {
-	Map<K, V> cache = new HashMap<K, V>();
-	List<K> accessOrder = new LinkedList<K>();
-	private final int CACHE_SIZE_LIMIT;
-	private static final int DEFAULT_CACHE_SIZE_LIMIT = 20000;
+public class SimpleCache<K, V> implements Cache<K, V> {
+	protected Map<K, V> cache = new HashMap<K, V>();
+	protected List<K> order = new LinkedList<K>();
+	protected final V DEFAULT_VALUE;
+	protected final int CACHE_SIZE_LIMIT;
+	protected static final int DEFAULT_CACHE_SIZE_LIMIT = 50000000;
 
-	public SimpleCache() {
-		this(DEFAULT_CACHE_SIZE_LIMIT);
+	public SimpleCache(V defaultValue) {
+		this(defaultValue, DEFAULT_CACHE_SIZE_LIMIT);
 	}
 
-	public SimpleCache(int limit) {
+	public SimpleCache(V defaultValue, int limit) {
+		this.DEFAULT_VALUE = defaultValue;
 		this.CACHE_SIZE_LIMIT = limit > 0 ? limit : DEFAULT_CACHE_SIZE_LIMIT;
 	}
 
-	public V put(K key, V value) {
+	synchronized public V put(K key, V value) {
 		V prevValue = this.get(key);
 		if (prevValue != null) {
-			this.accessOrder.remove(key);
+			this.order.remove(key);
 		}
 		this.cache.put(key, value);
-		this.accessOrder.add(0, key);
+		this.order.add(0, key);
 		while (this.cache.size() > this.CACHE_SIZE_LIMIT) {
-			this.cache.remove(this.accessOrder
-					.remove(this.accessOrder.size() - 1));
+			this.cache.remove(this.order.remove(this.order.size() - 1));
 		}
 		return prevValue;
 	}
 
-	public V get(K key) {
+	public V safeGet(K key) {
 		V result = this.cache.get(key);
-		if (result != null && !this.accessOrder.get(0).equals(key)) {
-			this.accessOrder.remove(key);
-			this.accessOrder.add(0, key);
+		if (result == null) {
+			result = this.DEFAULT_VALUE;
 		}
 		return result;
 	}
 
-	public V remove(K key) {
-		this.accessOrder.remove(key);
+	public V get(K key) {
+		return this.cache.get(key);
+	}
+
+	synchronized public V remove(K key) {
+		this.order.remove(key);
 		return this.cache.remove(key);
 	}
 
@@ -51,13 +55,12 @@ public class SimpleCache<K, V> {
 		return this.cache.size();
 	}
 
-	public void clear() {
+	synchronized public void clear() {
 		this.cache.clear();
-		this.accessOrder.clear();
+		this.order.clear();
 	}
 
 	public boolean isEmpty() {
 		return this.cache.isEmpty();
 	}
-
 }

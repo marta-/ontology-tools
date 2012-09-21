@@ -32,10 +32,12 @@ import edu.toronto.cs.ontools.annotation.SearchResult;
 import edu.toronto.cs.ontools.taxonomy.TaxonomyTerm;
 
 public class ICPredictor extends AbstractPredictor {
-	private static final boolean ENABLE_CUMMULATIVE_IC = true;
+	private static final boolean ENABLE_CUMMULATIVE_IC = false;
 
-	private final SimpleCache<String, Double> icCache = new SimpleCache<String, Double>();
-	private final SimpleCache<String, Double> simCache = new SimpleCache<String, Double>();
+	private final Cache<String, Double> icCache = new SimpleCache<String, Double>(
+			0.0);
+	private final Cache<String, Double> simCache = new SimpleCache<String, Double>(
+			0.0);
 
 	public double getIC(String taxonomyTermID) {
 		return getIC(this.annotations.getTaxonomyNode(taxonomyTermID));
@@ -95,6 +97,9 @@ public class ICPredictor extends AbstractPredictor {
 	}
 
 	public String getMICAId(String taxonomyTerm1, String taxonomyTerm2) {
+		if (taxonomyTerm1.equals(taxonomyTerm2)) {
+			return taxonomyTerm1;
+		}
 		// TODO: implement more efficiently!
 		Set<String> intersection = new HashSet<String>();
 		intersection.addAll(this.annotations.getTaxonomy().getAncestors(
@@ -127,7 +132,7 @@ public class ICPredictor extends AbstractPredictor {
 		Set<String> commonAnnotations = new HashSet<String>();
 
 		double max = -1;
-		int maxCategories = 10;
+		int maxCategories = 2;
 		String micaId = this.annotations.getTaxonomy().getRootId();
 		while (intersection.size() > 0 && result.size() < maxCategories) {
 			for (String a : intersection) {

@@ -84,6 +84,13 @@ public class CommandDispatcher {
 		LOOKUP("l", "lookup", false,
 				"Compute similarity scores for sets of terms given in an input file. "),
 
+		LAZY(
+				"L",
+				"lazy",
+				true,
+				"ONLY WITH \"-l\", ignored otherwise. "
+						+ "Only compute neighbor similarity score if the main gene has a score lower than the value given with this parameter."),
+
 		QUERY(
 				"Q",
 				"query",
@@ -275,6 +282,7 @@ public class CommandDispatcher {
 					: 0;
 			mandatoryParameters += this.hasOption(CmdLineOptions.LOOKUP) ? 1
 					: 0;
+
 			if (mandatoryParameters != 1) {
 				showUsage(options);
 				failWithMessage("It is MANDATORY that one and only one of -r, -l and -s be present in the command line.");
@@ -297,7 +305,8 @@ public class CommandDispatcher {
 					}
 				}
 			}
-			if (!this.hasOption(CmdLineOptions.LOOKUP)) {
+			if (this.hasOption(CmdLineOptions.SIMILARITY)
+					|| this.hasOption(CmdLineOptions.REDUCE)) {
 				if (!this.hasOption(CmdLineOptions.TAXONOMY)) {
 					showUsage(options);
 					failWithMessage("The taxonomy name (-t) is a MANDATORY argument");
@@ -388,7 +397,7 @@ public class CommandDispatcher {
 						inputFileName, outputFileName, symmetric);
 				System.out
 						.println("Done\nResults printed in " + outputFileName);
-			} else {
+			} else if (this.hasOption(CmdLineOptions.LOOKUP)) {
 				System.out.println("Performing gene lookup... ");
 				// check for the input files
 				if (!this.hasOption(CmdLineOptions.QUERY)) {
@@ -408,6 +417,14 @@ public class CommandDispatcher {
 						: queryFileName + "__" + refFileName + ".out";
 				Lookup l = new Lookup();
 				l.setDebugMode(this.hasOption(CmdLineOptions.DEBUG));
+				if (this.hasOption(CmdLineOptions.LAZY)) {
+					try {
+						double lazyScore = Double.parseDouble(this
+								.getOptionValue(CmdLineOptions.LAZY));
+						l.setLazyScore(lazyScore);
+					} catch (Exception ex) {
+					}
+				}
 				l.run(queryFileName, refFileName, outputFileName,
 						evidenceSources);
 			}

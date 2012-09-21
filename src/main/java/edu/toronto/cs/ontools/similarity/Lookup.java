@@ -18,9 +18,12 @@ import edu.toronto.cs.ontools.taxonomy.GO;
 import edu.toronto.cs.ontools.taxonomy.HPO;
 
 public class Lookup extends AbstractCommandAction {
+
 	private List<List<String>> referenceGO = new ArrayList<List<String>>();
 	private List<List<String>> referenceHPO = new ArrayList<List<String>>();
 	private List<String> referenceGene = new ArrayList<String>();
+	private double lazyScore = Double.MAX_VALUE;
+	private boolean lazy = false;
 
 	public void run(String queryFileName, String refFileName,
 			String outputFileName, List<String> evidenceSources) {
@@ -40,7 +43,7 @@ public class Lookup extends AbstractCommandAction {
 			BufferedReader rIn = new BufferedReader(new FileReader(refFileName));
 
 			String line;
-			int EXPECTED_LINE_PIECES = 3;
+			int REF_EXPECTED_LINE_PIECES = 3;
 			int GO_SET_POSITION = 0;
 			int HPO_SET_POSITION = 1;
 			int GENE_POSITION = 2;
@@ -59,7 +62,7 @@ public class Lookup extends AbstractCommandAction {
 					continue;
 				}
 				String pieces[] = line.split(SET_SEPARATOR);
-				if (pieces.length < EXPECTED_LINE_PIECES) {
+				if (pieces.length < REF_EXPECTED_LINE_PIECES) {
 					System.err.println("[" + refFileName
 							+ "] Unexpected format for line " + counter + ":\n"
 							+ line + "\n\n");
@@ -74,12 +77,21 @@ public class Lookup extends AbstractCommandAction {
 			int refSize = this.referenceGO.size();
 			rIn.close();
 			System.out.println(" Done");
+
 			System.out.print("Processing query file... ");
 			System.out.flush();
 			BufferedReader qIn = new BufferedReader(new FileReader(
 					queryFileName));
 			PrintStream out = new PrintStream(outputFileName);
 			counter = 0;
+
+			double originalMatchScore = 0.0, avgScore = 0.0, maxScore = 0.0;
+			boolean evaluatingOriginal = false;
+			final double MIN_MATCH_SCORE = this.lazyScore;
+			int QUERY_EXPECTED_LINE_PIECES = 5;
+			int WEIGHT_POSITION = 3;
+			int ORIGINAL_GENE_POSITION = 4;
+			int bestRefIdx = -1;
 			while ((line = qIn.readLine()) != null) {
 				++counter;
 				System.out.print(".");
@@ -93,8 +105,9 @@ public class Lookup extends AbstractCommandAction {
 				if (line.startsWith(COMMENT_MARKER)) {
 					continue;
 				}
+
 				String pieces[] = line.split(SET_SEPARATOR);
-				if (pieces.length < EXPECTED_LINE_PIECES) {
+				if (pieces.length < QUERY_EXPECTED_LINE_PIECES) {
 					System.err.println("[" + queryFileName
 							+ "] Unexpected format for line " + counter + ":\n"
 							+ line + "\n\n");
@@ -104,35 +117,51 @@ public class Lookup extends AbstractCommandAction {
 						.split(ITEM_SEPARATOR));
 				List<String> qHpo = Arrays.asList(pieces[HPO_SET_POSITION]
 						.split(ITEM_SEPARATOR));
-				double avgScore = 0;
-				double maxScore = 0;
-				int bestRefIdx = -1;
-				for (int i = 0; i < refSize; ++i) {
-					if (isDebugMode()) {
-						System.out.println("\n" + counter + " | " + i + "/"
-								+ refSize);
-						System.out.println(qHpo + " "
-								+ this.referenceHPO.get(i));
-					}
-					double scoreHpo = hP.getSimilarityScore(qHpo,
-							this.referenceHPO.get(i), false);
-					if (isDebugMode()) {
-						System.out.println("-->>" + scoreHpo);
-						System.out.println(qGo + " " + this.referenceGO.get(i));
-					}
-					double scoreGo = (scoreHpo > .5) ? gP.getSimilarityScore(
-							qGo, this.referenceGO.get(i), false) : 0;
-					if (isDebugMode()) {
-						System.out.println("-->>" + scoreGo);
-					}
-					double score = scoreHpo * scoreGo;
-					avgScore += score;
-					if (score > maxScore) {
-						maxScore = score;
-						bestRefIdx = i;
-					}
+
+				if (pieces[GENE_POSITION]
+						.equals(pieces[ORIGINAL_GENE_POSITION])) {
+					evaluatingOriginal = true;
+					originalMatchScore = 0.0;
 				}
-				avgScore /= refSize;
+				if (originalMatchScore < MIN_MATCH_SCORE) {
+					avgScore = 0;
+					maxScore = 0;
+					bestRefIdx = -1;
+					for (int i = 0; i < refSize; ++i) {
+						if (isDebugMode()) {
+							System.out.println("\n" + counter + " | " + i + "/"
+									+ refSize);
+							System.out.println(qHpo + " "
+									+ this.referenceHPO.get(i));
+						}
+						double scoreHpo = hP.getSimilarityScore(qHpo,
+								this.referenceHPO.get(i), false);
+						if (isDebugMode()) {
+							System.out.println("-->>" + scoreHpo);
+							System.out.println(qGo + " "
+									+ this.referenceGO.get(i));
+						}
+						double scoreGo = (scoreHpo > .5) ? gP
+								.getSimilarityScore(qGo, this.referenceGO
+										.get(i), false) : 0;
+						if (isDebugMode()) {
+							System.out.println("-->>" + scoreGo);
+						}
+						double score = scoreHpo * scoreGo;
+						avgScore += score;
+						if (score > maxScore) {
+							maxScore = score;
+							bestRefIdx = i;
+						}
+						if (evaluatingOriginal) {
+							originalMatchScore = score;
+						}
+					}
+					avgScore /= refSize;
+				} else {
+					avgScore = 0;
+					maxScore = 0;
+				}
 				out.println(line
 						+ "\t"
 						+ maxScore
@@ -159,4 +188,9 @@ public class Lookup extends AbstractCommandAction {
 		}
 	}
 
+	public void setLazyScore(double lazyScore) {
+		this.lazyScore = lazyScore;
+		this.lazy = true;
+
+	}
 }
