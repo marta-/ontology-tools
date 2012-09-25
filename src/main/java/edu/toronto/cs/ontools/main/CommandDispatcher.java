@@ -62,7 +62,8 @@ public class CommandDispatcher {
 		private static final long serialVersionUID = 20120815122350L;
 		{
 			addAll(DEFAULT_GO_EVIDENCE_SOURCES);
-			String[] otherValues = { "IGC", "RCA" };
+			String[] otherValues = { "IBA", "IBD", "IKR", "IRD", "TAS", "NAS",
+					"IC", "ND", "IEA", "IGC", "RCA" };
 			addAll(Arrays.asList(otherValues));
 		}
 	};
