@@ -103,6 +103,7 @@ public class Lookup extends AbstractCommandAction {
 					}
 				}
 				if (line.startsWith(COMMENT_MARKER)) {
+					out.println(line);
 					continue;
 				}
 
