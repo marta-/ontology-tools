@@ -48,7 +48,7 @@ public class OmimHPOAnnotations extends AbstractTaxonomyAnnotation {
 		this
 				.load(LocalFileUtils
 						.getInputFileHandler(
-								"http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab"
+								"http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab",
 								false));
 	}
 
